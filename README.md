@@ -3,7 +3,7 @@
 ## Setting up a new project based on the template
 ### Clone
 ```shell
-git clone https://github.com/FINTLabs/fint-spring-boot-template-project.git <your project name>
+git clone https://github.com/FINTLabs/fint-flyt-value-converting-service.git <your project name>
 cd <your project name>
 rm -Rf .git
 git init

@@ -1,6 +1,11 @@
+fint:
+  application-id: fint-flyt-value-converting-service
+server:
+  error:
+    include-message: always
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: https://idp.felleskomponent.no/nidp/oauth/nam
+  profiles:
+    include:
+      - flyt-kafka
+      - flyt-resource-server
+      - flyt-postgres
