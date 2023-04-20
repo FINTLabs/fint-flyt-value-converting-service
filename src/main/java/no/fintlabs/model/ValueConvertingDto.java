@@ -19,6 +19,9 @@ public class ValueConvertingDto {
     private final Long id;
 
     @NotNull
+    private final String displayName;
+
+    @NotNull
     private final String fromApplicationId;
 
     @NotNull

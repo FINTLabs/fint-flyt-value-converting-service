@@ -21,6 +21,9 @@ public class ValueConverting {
     private long id;
 
     @NotNull
+    private String displayName;
+
+    @NotNull
     private String fromApplicationId;
 
     @NotNull

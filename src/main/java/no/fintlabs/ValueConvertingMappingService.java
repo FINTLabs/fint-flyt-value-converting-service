@@ -11,6 +11,7 @@ public class ValueConvertingMappingService {
     public ValueConverting toEntity(ValueConvertingDto valueConvertingDto) {
         return ValueConverting
                 .builder()
+                .displayName(valueConvertingDto.getDisplayName())
                 .fromApplicationId(valueConvertingDto.getFromApplicationId())
                 .fromTypeId(valueConvertingDto.getFromTypeId())
                 .toApplicationId(valueConvertingDto.getToApplicationId())
@@ -23,6 +24,7 @@ public class ValueConvertingMappingService {
         return ValueConvertingDto
                 .builder()
                 .id(valueConverting.getId())
+                .displayName(valueConverting.getDisplayName())
                 .fromApplicationId(valueConverting.getFromApplicationId())
                 .fromTypeId(valueConverting.getFromTypeId())
                 .toApplicationId(valueConverting.getToApplicationId())
