@@ -8,6 +8,7 @@ create table converting_map
 create table value_converting
 (
     id                  bigserial not null,
+    display_name        varchar(255),
     from_application_id varchar(255),
     from_type_id        varchar(255),
     to_application_id   varchar(255),
