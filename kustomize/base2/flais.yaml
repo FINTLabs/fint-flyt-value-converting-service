@@ -1,0 +1,30 @@
+apiVersion: fintlabs.no/v1alpha1
+kind: Application
+metadata:
+  name: flais-test-fint-flyt-value-converting-service
+  namespace: trondelagfk-no
+  labels:
+    app.kubernetes.io/name: flais-test-fint-flyt-value-converting-service
+    app.kubernetes.io/instance: flais-test-fint-flyt-value-converting-service_trondelagfk_no
+    app.kubernetes.io/version: latest
+    app.kubernetes.io/component: test-application
+    app.kubernetes.io/part-of: fint-flyt
+    fintlabs.no/team: flyt
+spec:
+  orgId: fintlabs.no
+  image: docker/getting-started
+  kafka:
+    enabled: true
+    acls:
+      - permission: admin
+        topic: 'no-permission'
+  database:
+    enabled: true
+  url:
+    hostname: hostname
+    basePath: path
+  ingress:
+    enabled: true
+  env:
+    - name: JAVA_TOOL_OPTIONS
+      value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
