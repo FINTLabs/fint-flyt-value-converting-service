@@ -1,16 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: vlfk-no
+namespace: trondelagfk-no
 resources:
   - ../../../base2
 commonLabels:
   app.kubernetes.io/name: fint-flyt-value-converting-service
-  app.kubernetes.io/instance: fint-flyt-value-converting-service_vlfk-no
+  app.kubernetes.io/instance: fint-flyt-value-converting-service_trondelagfk-no
   app.kubernetes.io/version: latest
   app.kubernetes.io/component: backend
   app.kubernetes.io/part-of: fint-flyt
   fintlabs.no/team: flyt
-  fintlabs.no/org-id: vlfk.no
+  fintlabs.no/org-id: trondelagfk.no
 patches:
   - patch: |-
       - op: replace
