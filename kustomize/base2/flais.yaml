@@ -1,17 +1,19 @@
 apiVersion: fintlabs.no/v1alpha1
 kind: Application
 metadata:
-  name: flais-test-fint-flyt-value-converting-service
+  name: fint-flyt-value-converting-service
   namespace: trondelagfk-no
   labels:
-    app.kubernetes.io/name: flais-test-fint-flyt-value-converting-service
-    app.kubernetes.io/instance: flais-test-fint-flyt-value-converting-service_trondelagfk_no
+    app.kubernetes.io/name: fint-flyt-value-converting-service
+    app.kubernetes.io/instance: fint-flyt-value-converting-service_trondelagfk_no
     app.kubernetes.io/version: latest
     app.kubernetes.io/component: test-application
     app.kubernetes.io/part-of: fint-flyt
     fintlabs.no/team: flyt
 spec:
-  orgId: fintlabs.no
+  port: 80
+  imagePullPolicy: Always
+  orgId: trondelagfk.no
   image: docker/getting-started
   kafka:
     enabled: true
@@ -28,3 +30,8 @@ spec:
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -Xmx1840M'
+  restartPolicy: Always
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
