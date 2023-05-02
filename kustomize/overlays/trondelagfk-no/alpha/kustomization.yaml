@@ -23,5 +23,5 @@ patches:
         value: "trondelag-no.flyt.*"
     target:
       kind: Application
-      name: flais-test-fint-flyt-value-converting-service
+      name: fint-flyt-value-converting-service
 
