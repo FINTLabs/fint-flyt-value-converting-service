@@ -14,19 +14,10 @@ commonLabels:
 patches:
   - patch: |-
       - op: replace
-        path: "/spec/url/hostname"
-        value: "flyt.vigoiks.no"
-    target:
-      kind: Application
-      name: flais-test-fint-flyt-value-converting-service
-  - patch: |-
-      - op: replace
-        path: "/spec/url/basePath"
-        value: "/alpha/trondelagfk-no/api/intern/value-convertings"
-    target:
-      kind: Application
-      name: flais-test-fint-flyt-value-converting-service
-  - patch: |-
+        path: "/spec/url"
+        value:
+          hostname: "flyt.vigoiks.no"
+          basePath: "/alpha/trondelagfk-no/api/intern/value-convertings"
       - op: replace
         path: "/spec/kafka/acls/0/topic"
         value: "trondelag-no.flyt.*"
