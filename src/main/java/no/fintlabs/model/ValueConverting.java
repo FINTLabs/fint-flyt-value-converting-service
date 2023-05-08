@@ -24,7 +24,7 @@ public class ValueConverting {
     private String displayName;
 
     @NotNull
-    private String fromApplicationId;
+    private Long fromApplicationId;
 
     @NotNull
     private String fromTypeId;

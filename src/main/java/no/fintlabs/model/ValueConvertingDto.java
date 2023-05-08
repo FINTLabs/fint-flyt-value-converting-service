@@ -22,7 +22,7 @@ public class ValueConvertingDto {
     private final String displayName;
 
     @NotNull
-    private final String fromApplicationId;
+    private final Long fromApplicationId;
 
     @NotNull
     private final String fromTypeId;
