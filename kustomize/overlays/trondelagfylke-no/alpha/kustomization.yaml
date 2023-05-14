@@ -12,12 +12,6 @@ commonLabels:
 patches:
   - patch: |-
       - op: replace
-        path: "/metadata/labels/app.kubernetes.io~1instance"
-        value: "fint-flyt-value-converting-service_trondelagfylke-no"
-      - op: replace
-        path: "/metadata/labels/fintlabs.no~1org-id"
-        value: "trondelagfylke.no"
-      - op: replace
         path: "/spec/kafka/acls/0/topic"
         value: "trondelagfylke-no.flyt.*"
       - op: replace
