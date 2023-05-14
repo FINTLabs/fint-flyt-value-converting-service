@@ -24,7 +24,7 @@ spec:
   database:
     database: fint-flyt
   url:
-    hostname: host
+    hostname: flyt.vigoiks.no
     basePath: path
   ingress:
     enabled: true

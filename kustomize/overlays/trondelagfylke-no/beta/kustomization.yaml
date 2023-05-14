@@ -18,9 +18,6 @@ patches:
         path: "/spec/orgId"
         value: "trondelagfylke.no"
       - op: replace
-        path: "/spec/url/hostname"
-        value: "flyt.vigoiks.no"
-      - op: replace
         path: "/spec/url/basePath"
         value: "/beta/trondelagfylke-no"
       - op: replace
