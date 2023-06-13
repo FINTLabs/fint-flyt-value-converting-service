@@ -16,5 +16,7 @@ spring:
     url: jdbc:postgresql://localhost:5440/fint-flyt-value-converting-service
     username: postgres
     password: password
+    hikari:
+      schema: postgres
 server:
   port: 8094
