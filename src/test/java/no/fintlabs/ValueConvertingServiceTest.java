@@ -3,16 +3,17 @@ package no.fintlabs;
 import no.fintlabs.model.ValueConverting;
 import no.fintlabs.model.ValueConvertingDto;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,23 +37,41 @@ class ValueConvertingServiceTest {
     }
 
     @Test
-    @Disabled
-    void findAll_ShouldReturnPageOfValueConvertingDto() {
-        Pageable pageable = mock(Pageable.class);
-        Page<ValueConverting> expectedPage = new PageImpl<>(Collections.emptyList());
+    public void testFindAll() {
+        Pageable pageable = PageRequest.of(0, 10);
+        boolean excludeConvertingMap = true;
 
-        when(repository.findAll(pageable)).thenReturn(expectedPage);
+        ValueConverting valueConverting = ValueConverting
+                .builder()
+                .id(1L)
+                .displayName("displayName")
+                .fromApplicationId(2L)
+                .fromTypeId("fromTypeId")
+                .toApplicationId("toApplicationId")
+                .toTypeId("toTypeId")
+                .convertingMap(new HashMap<>())
+                .build();
 
-        ValueConvertingDto dto = mock(ValueConvertingDto.class);
+        Page<ValueConverting> valueConvertingPage = new PageImpl<>(Collections.singletonList(valueConverting), pageable, 1);
 
-        when(mappingService.toDto(any(), anyBoolean())).thenReturn(dto);
+        ValueConvertingDto valueConvertingDto = ValueConvertingDto
+                .builder()
+                .id(valueConverting.getId())
+                .displayName(valueConverting.getDisplayName())
+                .fromApplicationId(valueConverting.getFromApplicationId())
+                .fromTypeId(valueConverting.getFromTypeId())
+                .toApplicationId(valueConverting.getToApplicationId())
+                .toTypeId(valueConverting.getToTypeId())
+                .convertingMap(null)
+                .build();
 
-        Page<ValueConvertingDto> result = service.findAll(pageable, false);
+        when(repository.findAll(pageable)).thenReturn(valueConvertingPage);
+        when(mappingService.toDto(valueConverting, excludeConvertingMap)).thenReturn(valueConvertingDto);
 
-        verify(repository).findAll(pageable);
-        verify(mappingService).toDto(any(), eq(false));
+        Page<ValueConvertingDto> actualPage = service.findAll(pageable, excludeConvertingMap);
 
-        assertEquals(expectedPage, result);
+        assertEquals(1, actualPage.getTotalElements());
+        assertEquals(valueConvertingDto, actualPage.getContent().get(0));
     }
 
     @Test
