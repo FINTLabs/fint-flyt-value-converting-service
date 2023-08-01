@@ -13,6 +13,8 @@ spring:
   kafka:
     bootstrap-servers: localhost:9092
   datasource:
+    hikari:
+      schema: fintlabs_no
     url: jdbc:postgresql://localhost:5440/fint-flyt-value-converting-service
     username: postgres
     password: password
