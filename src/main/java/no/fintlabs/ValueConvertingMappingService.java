@@ -5,10 +5,20 @@ import no.fintlabs.model.ValueConvertingDto;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ValueConvertingMappingService {
     public ValueConverting toEntity(ValueConvertingDto valueConvertingDto) {
+
+        Map<String, String> trimmedMap = valueConvertingDto.getConvertingMap().entrySet()
+                .stream()
+                .collect(Collectors.toMap(
+                        entry -> entry.getKey().trim(),
+                        entry -> entry.getValue().trim()
+                ));
+
         return ValueConverting
                 .builder()
                 .displayName(valueConvertingDto.getDisplayName())
@@ -16,7 +26,7 @@ public class ValueConvertingMappingService {
                 .fromTypeId(valueConvertingDto.getFromTypeId())
                 .toApplicationId(valueConvertingDto.getToApplicationId())
                 .toTypeId(valueConvertingDto.getToTypeId())
-                .convertingMap(valueConvertingDto.getConvertingMap())
+                .convertingMap(trimmedMap)
                 .build();
     }
 

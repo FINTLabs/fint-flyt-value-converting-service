@@ -8,8 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ValueConvertingMappingServiceTest {
     private ValueConvertingMappingService mappingService;
@@ -38,6 +37,40 @@ public class ValueConvertingMappingServiceTest {
         assertEquals(dto.getToApplicationId(), entity.getToApplicationId());
         assertEquals(dto.getToTypeId(), entity.getToTypeId());
         assertEquals(dto.getConvertingMap(), entity.getConvertingMap());
+    }
+
+    @Test
+    public void testToEntityTrimmedStringsInConvertingMap() {
+        Map<String, String> convertingMap = new HashMap<>();
+        convertingMap.put(" key1 ", " value1 ");
+        convertingMap.put(" key2 ", " value2 ");
+
+        ValueConvertingDto dto = ValueConvertingDto.builder()
+                .displayName("Test Display Name")
+                .fromApplicationId(1L)
+                .fromTypeId("fromType")
+                .toApplicationId("toAppId")
+                .toTypeId("toType")
+                .convertingMap(convertingMap)
+                .build();
+
+        ValueConverting entity = mappingService.toEntity(dto);
+
+        assertEquals(dto.getDisplayName(), entity.getDisplayName());
+        assertEquals(dto.getFromApplicationId(), entity.getFromApplicationId());
+        assertEquals(dto.getFromTypeId(), entity.getFromTypeId());
+        assertEquals(dto.getToApplicationId(), entity.getToApplicationId());
+        assertEquals(dto.getToTypeId(), entity.getToTypeId());
+
+        Map<String, String> entityConvertingMap = entity.getConvertingMap();
+
+        convertingMap.forEach((key, value) -> {
+            String expectedTrimmedKey = key.trim();
+            String expectedTrimmedValue = value.trim();
+
+            assertTrue(entityConvertingMap.containsKey(expectedTrimmedKey));
+            assertEquals(expectedTrimmedValue, entityConvertingMap.get(expectedTrimmedKey));
+        });
     }
 
     @Test
