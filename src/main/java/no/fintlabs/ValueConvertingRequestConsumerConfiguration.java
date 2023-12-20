@@ -9,7 +9,6 @@ import no.fintlabs.model.ValueConverting;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.listener.CommonLoggingErrorHandler;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 
 @Configuration
@@ -31,14 +30,13 @@ public class ValueConvertingRequestConsumerConfiguration {
         requestTopicService
                 .ensureTopic(requestTopicNameParameters, 0, TopicCleanupPolicyParameters.builder().build());
 
-        return requestConsumerFactoryService.createFactory(
+        return requestConsumerFactoryService.createRecordConsumerFactory(
                 Long.class,
                 ValueConverting.class,
                 (ConsumerRecord<String, Long> consumerRecord) -> ReplyProducerRecord
                         .<ValueConverting>builder()
                         .value(valueConvertingRepository.findById(consumerRecord.value()).orElse(null))
-                        .build(),
-                new CommonLoggingErrorHandler()
+                        .build()
         ).createContainer(requestTopicNameParameters);
     }
 
