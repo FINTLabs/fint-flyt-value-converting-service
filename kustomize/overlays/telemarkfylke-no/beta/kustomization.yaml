@@ -1,31 +1,31 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: fintlabs-no
+namespace: telemarkfylke-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-value-converting-service_fintlabs_no
-  fintlabs.no/org-id: fintlabs.no
+  app.kubernetes.io/instance: fint-flyt-value-converting-service_service_telemarkfylke_no
+  fintlabs.no/org-id: telemarkfylke.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "fintlabs-no.flyt.*"
+        value: "telemarkfylke-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "fintlabs.no"
+        value: "telemarkfylke.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/alpha/fintlabs-no"
+        value: "/beta/telemarkfylke-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/alpha/fintlabs-no/api/intern/value-convertings"
+        value: "/beta/telemarkfylke-no/api/intern/value-convertings"
       - op: replace
         path: "/spec/env/1/value"
-        value: "fintlabs.no, vigo.no"
+        value: "telemarkfylke.no, vigo.no"
 
     target:
       kind: Application

@@ -1,31 +1,31 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: viken-no
+namespace: ofk-no
 
 resources:
   - ../../../base
 
 commonLabels:
-  app.kubernetes.io/instance: fint-flyt-value-converting-service_viken_no
-  fintlabs.no/org-id: viken.no
+  app.kubernetes.io/instance: fint-flyt-value-converting-service_ofk_no
+  fintlabs.no/org-id: ofk.no
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "viken-no.flyt.*"
+        value: "ofk-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "viken.no"
+        value: "ofk.no"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/alpha/viken-no"
+        value: "/beta/ofk-no"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/alpha/viken-no/api/intern/value-convertings"
+        value: "/beta/ofk-no/api/intern/value-convertings"
       - op: replace
         path: "/spec/env/1/value"
-        value: "viken.no, vigo.no"
+        value: "ofk.no, vigo.no"
 
     target:
       kind: Application
