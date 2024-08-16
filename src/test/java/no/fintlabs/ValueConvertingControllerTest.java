@@ -10,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -19,7 +20,8 @@ import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class ValueConvertingControllerTest {
@@ -39,6 +41,9 @@ public class ValueConvertingControllerTest {
     @Mock
     private Validator validator;
 
+    @Mock
+    Authentication authentication;
+
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -54,7 +59,7 @@ public class ValueConvertingControllerTest {
         Page<ValueConvertingDto> mockPage = mock(Page.class);
         when(valueConvertingService.findAll(any(PageRequest.class), anyBoolean())).thenReturn(mockPage);
 
-        ResponseEntity<Page<ValueConvertingDto>> response = controller.getValueConvertings(0, 10, "property", Sort.Direction.ASC, false);
+        ResponseEntity<Page<ValueConvertingDto>> response = controller.getValueConvertings(authentication, 0, 10, "property", Sort.Direction.ASC, false);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(mockPage, response.getBody());
@@ -65,7 +70,7 @@ public class ValueConvertingControllerTest {
         ValueConvertingDto dto = ValueConvertingDto.builder().build();
         when(valueConvertingService.findById(1L)).thenReturn(Optional.of(dto));
 
-        ResponseEntity<ValueConvertingDto> response = controller.getValueConverting(1L);
+        ResponseEntity<ValueConvertingDto> response = controller.getValueConverting(authentication, 1L);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(dto, response.getBody());
@@ -75,7 +80,7 @@ public class ValueConvertingControllerTest {
     public void testGetValueConvertingNotFound() {
         when(valueConvertingService.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ResponseStatusException.class, () -> controller.getValueConverting(1L));
+        assertThrows(ResponseStatusException.class, () -> controller.getValueConverting(authentication, 1L));
     }
 
     @SuppressWarnings("unchecked")
@@ -86,7 +91,7 @@ public class ValueConvertingControllerTest {
         when(validatorFactory.getValidator().validate(dto)).thenReturn(violations);
         when(validationErrorsFormattingService.format(violations)).thenReturn("Error message");
 
-        assertThrows(ResponseStatusException.class, () -> controller.postValueConverting(dto));
+        assertThrows(ResponseStatusException.class, () -> controller.postValueConverting(authentication, dto));
     }
 
     @Test
@@ -95,7 +100,7 @@ public class ValueConvertingControllerTest {
         when(validator.validate(dto)).thenReturn(Collections.emptySet());
         when(valueConvertingService.save(dto)).thenReturn(dto);
 
-        ResponseEntity<ValueConvertingDto> response = controller.postValueConverting(dto);
+        ResponseEntity<ValueConvertingDto> response = controller.postValueConverting(authentication, dto);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(dto, response.getBody());
