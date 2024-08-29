@@ -94,7 +94,7 @@ public class ValueConvertingControllerTest {
     }
 
     @Test
-    public void shouldReturnHttp200IfGetValueConvertingFound() {
+    public void shouldReturnHttp200IfValueConvertingFound() {
         ValueConvertingDto dto = ValueConvertingDto.builder().build();
         when(valueConvertingService.findById(1L)).thenReturn(Optional.of(dto));
 
