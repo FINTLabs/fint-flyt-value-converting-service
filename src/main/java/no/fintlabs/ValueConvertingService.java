@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 
@@ -23,6 +24,19 @@ public class ValueConvertingService {
     public Page<ValueConvertingDto> findAll(Pageable pageable, boolean excludeConvertingMap) {
         return valueConvertingRepository
                 .findAll(pageable)
+                .map(valueConverting -> valueConvertingMappingService.toDto(
+                        valueConverting,
+                        excludeConvertingMap
+                ));
+    }
+
+    public Page<ValueConvertingDto> findAllBySourceApplicationIds(
+            Pageable pageable,
+            boolean excludeConvertingMap,
+            List<Long> sourceApplicationIds
+    ) {
+        return valueConvertingRepository
+                .findAllByFromApplicationIdIn(pageable, sourceApplicationIds)
                 .map(valueConverting -> valueConvertingMappingService.toDto(
                         valueConverting,
                         excludeConvertingMap
