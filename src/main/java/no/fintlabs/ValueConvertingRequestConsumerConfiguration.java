@@ -28,7 +28,7 @@ public class ValueConvertingRequestConsumerConfiguration {
                 .parameterName("value-converting-id")
                 .build();
         requestTopicService
-                .ensureTopic(requestTopicNameParameters, 345600000, TopicCleanupPolicyParameters.builder().build());
+                .ensureTopic(requestTopicNameParameters, 0, TopicCleanupPolicyParameters.builder().build());
 
         return requestConsumerFactoryService.createRecordConsumerFactory(
                 Long.class,
