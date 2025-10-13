@@ -9,3 +9,4 @@ spring:
       - flyt-kafka
       - flyt-resource-server
       - flyt-postgres
+      - flyt-logging
