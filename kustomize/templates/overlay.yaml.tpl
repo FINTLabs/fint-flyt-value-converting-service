@@ -1,48 +1,42 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: ofk-no
+namespace: $NAMESPACE
 
 resources:
   - ../../../base
 
 labels:
   - pairs:
-      app.kubernetes.io/instance: fint-flyt-value-converting-service_ofk_no
-      fintlabs.no/org-id: ofk.no
+      app.kubernetes.io/instance: $APP_INSTANCE_LABEL
+      fintlabs.no/org-id: $ORG_ID
 
 patches:
   - patch: |-
       - op: replace
         path: "/spec/kafka/acls/0/topic"
-        value: "ofk-no.flyt.*"
+        value: "$KAFKA_TOPIC"
       - op: replace
         path: "/spec/orgId"
-        value: "ofk.no"
+        value: "$ORG_ID"
       - op: replace
         path: "/spec/url/basePath"
-        value: "/beta/ofk-no"
+        value: "$URL_BASE_PATH"
       - op: replace
         path: "/spec/ingress/basePath"
-        value: "/beta/ofk-no/api/intern/value-convertings"
+        value: "$INGRESS_BASE_PATH"
       - op: replace
         path: "/spec/env/1/value"
         value: |
-          {
-            "ofk.no":["USER"],
-            "viken.no":["USER"],
-            "frid-iks.no":["USER"],
-            "vigo.no":["DEVELOPER", "USER"],
-            "novari.no":["DEVELOPER", "USER"]
-          }
+$AUTHORIZED_ORG_ROLE_PAIRS
       - op: replace
         path: "/spec/env/4/value"
-        value: "ofk-no"
+        value: "$NOVARI_KAFKA_TOPIC_ORGID"
       - op: replace
         path: "/spec/probes/readiness/path"
-        value: "/beta/ofk-no/actuator/health"
+        value: "$READINESS_PATH"
       - op: replace
         path: "/spec/observability/metrics/path"
-        value: "/beta/ofk-no/actuator/prometheus"
+        value: "$METRICS_PATH"
 
     target:
       kind: Application

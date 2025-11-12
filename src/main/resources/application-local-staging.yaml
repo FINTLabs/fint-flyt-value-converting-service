@@ -1,14 +1,23 @@
 fint:
   org-id: fintlabs.no
+  kafka:
+    enable-ssl: false
+
+
+novari:
   flyt:
     resource-server:
       security:
         api:
           internal:
             enabled: true
-            authorized-org-id-role-pairs-json: "{\"vigo.no\":[\"https://role-catalog.vigoiks.no/vigo/flyt/developer\"]}"
+            authorized-org-id-role-pairs-json: "{\"vigo.no\":[\"DEVELOPER\"]}"
+
   kafka:
     default-replicas: 1
+    topic:
+      org-id: fintlabs-no
+
 spring:
   kafka:
     bootstrap-servers: localhost:9092
@@ -18,5 +27,6 @@ spring:
     url: jdbc:postgresql://localhost:5440/fint-flyt-value-converting-service
     username: postgres
     password: password
+
 server:
   port: 8094

@@ -1,7 +1,7 @@
-package no.fintlabs;
+package no.novari.value.converting;
 
-import no.fintlabs.model.ValueConverting;
-import no.fintlabs.model.ValueConvertingDto;
+import no.novari.value.converting.model.ValueConverting;
+import no.novari.value.converting.model.ValueConvertingDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,7 +18,11 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class ValueConvertingServiceTest {
 
