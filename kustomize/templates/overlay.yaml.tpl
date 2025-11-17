@@ -32,7 +32,7 @@ $AUTHORIZED_ORG_ROLE_PAIRS
         path: "/spec/env/-"
         value:
          name: "novari.kafka.topic.orgId"
-         value: "$FINT_KAFKA_TOPIC_ORG_ID"
+         value: "$NOVARI_KAFKA_TOPIC_ORGID"
       - op: replace
         path: "/spec/probes/readiness/path"
         value: "$READINESS_PATH"
