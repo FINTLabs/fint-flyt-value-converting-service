@@ -37,9 +37,9 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.kafka:spring-kafka")
 
-    implementation("no.novari:flyt-resource-server:6.0.0-rc-22")
-    implementation("no.novari:kafka:5.0.0-rc-18")
-    implementation("no.novari:flyt-kafka:4.0.0-rc-6")
+    implementation("no.novari:flyt-resource-server:6.0.0-rc-25")
+    implementation("no.novari:kafka:5.0.0-rc-19")
+    implementation("no.novari:flyt-kafka:4.0.0-rc-7")
 
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")

@@ -33,7 +33,7 @@ public class ValueConvertingRequestConsumerConfiguration {
         RequestTopicNameParameters requestTopicNameParameters = RequestTopicNameParameters
                 .builder()
                 .topicNamePrefixParameters(TopicNamePrefixParameters
-                        .builder()
+                        .stepBuilder()
                         .orgIdApplicationDefault()
                         .domainContextApplicationDefault()
                         .build()

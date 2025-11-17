@@ -3,14 +3,12 @@ fint:
   kafka:
     enable-ssl: false
 
-
 novari:
   flyt:
     resource-server:
       security:
         api:
           internal:
-            enabled: true
             authorized-org-id-role-pairs-json: "{\"vigo.no\":[\"DEVELOPER\"]}"
 
   kafka:
