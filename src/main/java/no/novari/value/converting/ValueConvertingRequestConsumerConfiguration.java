@@ -1,6 +1,5 @@
 package no.novari.value.converting;
 
-import no.novari.value.converting.model.ValueConverting;
 import no.novari.kafka.consuming.ErrorHandlerConfiguration;
 import no.novari.kafka.consuming.ErrorHandlerFactory;
 import no.novari.kafka.requestreply.ReplyProducerRecord;
@@ -10,6 +9,7 @@ import no.novari.kafka.requestreply.topic.RequestTopicService;
 import no.novari.kafka.requestreply.topic.configuration.RequestTopicConfiguration;
 import no.novari.kafka.requestreply.topic.name.RequestTopicNameParameters;
 import no.novari.kafka.topic.name.TopicNamePrefixParameters;
+import no.novari.value.converting.model.ValueConverting;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

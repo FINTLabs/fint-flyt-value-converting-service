@@ -32,19 +32,16 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-webflux")
-    implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
-    implementation("org.springframework.kafka:spring-kafka")
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("org.springframework.boot:spring-boot-starter-webflux")
 
-    implementation("no.novari:flyt-resource-server:6.0.0-rc-26")
-    implementation("no.novari:kafka:5.0.0-rc-20")
-    implementation("no.novari:flyt-kafka:4.0.0-rc-8")
+    implementation("no.novari:flyt-resource-server:6.0.0-rc-27")
+    implementation("no.novari:kafka:5.0.0-rc-21")
+    implementation("no.novari:flyt-kafka:4.0.0-rc-10")
 
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
-
-    implementation("org.hibernate.validator:hibernate-validator")
 
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")
     runtimeOnly("org.postgresql:postgresql")
