@@ -5,7 +5,6 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import no.novari.flyt.resourceserver.security.user.UserAuthorizationService;
 import no.novari.value.converting.model.ValueConvertingDto;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,13 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
@@ -34,21 +27,18 @@ public class ValueConvertingController {
     private final ValueConvertingService valueConvertingService;
     private final ValidationErrorsFormattingService validationErrorsFormattingService;
     private final Validator validator;
-    private final boolean userPermissionsConsumerEnabled;
     private final UserAuthorizationService userAuthorizationService;
 
     public ValueConvertingController(
             ValueConvertingService valueConvertingService,
             ValidationErrorsFormattingService validationErrorsFormattingService,
             ValidatorFactory validatorFactory,
-            UserAuthorizationService userAuthorizationService,
-            @Value("${novari.flyt.resource-server.user-permissions-consumer.enabled:false}") boolean userPermissionsConsumerEnabled
+            UserAuthorizationService userAuthorizationService
     ) {
         this.validator = validatorFactory.getValidator();
         this.valueConvertingService = valueConvertingService;
         this.validationErrorsFormattingService = validationErrorsFormattingService;
         this.userAuthorizationService = userAuthorizationService;
-        this.userPermissionsConsumerEnabled = userPermissionsConsumerEnabled;
     }
 
     @GetMapping
@@ -64,16 +54,12 @@ public class ValueConvertingController {
                 .of(page, size)
                 .withSort(sortDirection, sortProperty);
 
-        if (userPermissionsConsumerEnabled) {
-            Set<Long> sourceApplicationIds = userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication);
-            return ResponseEntity.ok(valueConvertingService.findAllBySourceApplicationIds(
-                    pageRequest,
-                    excludeConvertingMap,
-                    sourceApplicationIds
-            ));
-        }
-
-        return ResponseEntity.ok(valueConvertingService.findAll(pageRequest, excludeConvertingMap));
+        Set<Long> sourceApplicationIds = userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication);
+        return ResponseEntity.ok(valueConvertingService.findAllBySourceApplicationIds(
+                pageRequest,
+                excludeConvertingMap,
+                sourceApplicationIds
+        ));
     }
 
     @GetMapping("{valueConvertingId}")
@@ -90,11 +76,9 @@ public class ValueConvertingController {
 
         ValueConvertingDto valueConvertingDto = valueConvertingDtoOptional.get();
 
-        if (userPermissionsConsumerEnabled) {
-            userAuthorizationService.checkIfUserHasAccessToSourceApplication(
-                    authentication,
-                    valueConvertingDto.getFromApplicationId());
-        }
+        userAuthorizationService.checkIfUserHasAccessToSourceApplication(
+                authentication,
+                valueConvertingDto.getFromApplicationId());
 
         return ResponseEntity.ok(valueConvertingDto);
     }
@@ -104,11 +88,9 @@ public class ValueConvertingController {
             @AuthenticationPrincipal Authentication authentication,
             @RequestBody ValueConvertingDto valueConvertingDto
     ) {
-        if (userPermissionsConsumerEnabled) {
-            userAuthorizationService.checkIfUserHasAccessToSourceApplication(
-                    authentication,
-                    valueConvertingDto.getFromApplicationId());
-        }
+        userAuthorizationService.checkIfUserHasAccessToSourceApplication(
+                authentication,
+                valueConvertingDto.getFromApplicationId());
 
         Set<ConstraintViolation<ValueConvertingDto>> constraintViolations = validator
                 .validate(valueConvertingDto);

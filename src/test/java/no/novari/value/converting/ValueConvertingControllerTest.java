@@ -60,29 +60,13 @@ public class ValueConvertingControllerTest {
         pageRequest = PageRequest.of(0, 10, Sort.Direction.ASC, "property");
     }
 
-    private ValueConvertingController getController(boolean userPermissionsConsumerEnabled) {
+    private ValueConvertingController getController() {
         return new ValueConvertingController(
                 valueConvertingService,
                 validationErrorsFormattingService,
                 validatorFactory,
-                userAuthorizationService,
-                userPermissionsConsumerEnabled
+                userAuthorizationService
         );
-    }
-
-    @Test
-    @DisplayName("returns all ValueConverting when user permissions are disabled")
-    public void returnsAllValueConverting_whenUserPermissionsDisabled() {
-        Page<ValueConvertingDto> mockPage = mock(Page.class);
-        when(valueConvertingService.findAll(pageRequest, false)).thenReturn(mockPage);
-
-        ResponseEntity<Page<ValueConvertingDto>> response = getController(false)
-                .getValueConvertings(authentication, 0, 10, "property", Sort.Direction.ASC, false);
-
-        verify(valueConvertingService).findAll(pageRequest, false);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(mockPage);
     }
 
     @Test
@@ -95,7 +79,7 @@ public class ValueConvertingControllerTest {
         when(valueConvertingService.findAllBySourceApplicationIds(pageRequest, false, mockSourceApplicationIds))
                 .thenReturn(mockPage);
 
-        ResponseEntity<Page<ValueConvertingDto>> response = getController(true)
+        ResponseEntity<Page<ValueConvertingDto>> response = getController()
                 .getValueConvertings(authentication, 0, 10, "property", Sort.Direction.ASC, false);
 
         verify(userAuthorizationService).getUserAuthorizedSourceApplicationIds(authentication);
@@ -111,7 +95,7 @@ public class ValueConvertingControllerTest {
         ValueConvertingDto dto = ValueConvertingDto.builder().build();
         when(valueConvertingService.findById(1L)).thenReturn(Optional.of(dto));
 
-        ResponseEntity<ValueConvertingDto> response = getController(false)
+        ResponseEntity<ValueConvertingDto> response = getController()
                 .getValueConverting(authentication, 1L);
 
         verify(valueConvertingService).findById(1L);
@@ -132,7 +116,7 @@ public class ValueConvertingControllerTest {
 
         when(valueConvertingService.findById(1L)).thenReturn(Optional.of(valueConvertingDto));
 
-        assertThatThrownBy(() -> getController(true).getValueConverting(authentication, 1L))
+        assertThatThrownBy(() -> getController().getValueConverting(authentication, 1L))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasFieldOrPropertyWithValue("statusCode", HttpStatus.FORBIDDEN)
                 .hasMessageContaining("Forbidden");
@@ -146,7 +130,7 @@ public class ValueConvertingControllerTest {
     public void throwsNotFoundException_whenValueConvertingNotFound() {
         when(valueConvertingService.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> getController(false).getValueConverting(authentication, 1L))
+        assertThatThrownBy(() -> getController().getValueConverting(authentication, 1L))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasFieldOrPropertyWithValue("statusCode", HttpStatus.NOT_FOUND);
 
@@ -161,7 +145,7 @@ public class ValueConvertingControllerTest {
         when(validatorFactory.getValidator().validate(dto)).thenReturn(violations);
         when(validationErrorsFormattingService.format(violations)).thenReturn("Error message");
 
-        assertThatThrownBy(() -> getController(false).postValueConverting(authentication, dto))
+        assertThatThrownBy(() -> getController().postValueConverting(authentication, dto))
                 .isInstanceOf(ResponseStatusException.class);
 
         verify(validatorFactory.getValidator()).validate(dto);
@@ -178,7 +162,7 @@ public class ValueConvertingControllerTest {
         ValueConvertingDto valueConvertingDto = mock(ValueConvertingDto.class);
         when(valueConvertingDto.getFromApplicationId()).thenReturn(1L);
 
-        assertThatThrownBy(() -> getController(true).postValueConverting(authentication, valueConvertingDto))
+        assertThatThrownBy(() -> getController().postValueConverting(authentication, valueConvertingDto))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasFieldOrPropertyWithValue("statusCode", HttpStatus.FORBIDDEN)
                 .hasMessageContaining("Forbidden");
@@ -193,7 +177,7 @@ public class ValueConvertingControllerTest {
         when(validator.validate(dto)).thenReturn(Collections.emptySet());
         when(valueConvertingService.save(dto)).thenReturn(dto);
 
-        ResponseEntity<ValueConvertingDto> response = getController(false)
+        ResponseEntity<ValueConvertingDto> response = getController()
                 .postValueConverting(authentication, dto);
 
         verify(validator).validate(dto);
@@ -212,7 +196,7 @@ public class ValueConvertingControllerTest {
         when(validator.validate(valueConvertingDto)).thenReturn(Collections.emptySet());
         when(valueConvertingService.save(valueConvertingDto)).thenReturn(valueConvertingDto);
 
-        ResponseEntity<ValueConvertingDto> response = getController(true)
+        ResponseEntity<ValueConvertingDto> response = getController()
                 .postValueConverting(authentication, valueConvertingDto);
 
         verify(validator).validate(valueConvertingDto);
