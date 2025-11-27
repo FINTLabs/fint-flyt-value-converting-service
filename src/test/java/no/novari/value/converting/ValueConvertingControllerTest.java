@@ -70,8 +70,8 @@ public class ValueConvertingControllerTest {
     }
 
     @Test
-    @DisplayName("returns ValueConverting filtered by sourceApplicationIds when user permissions enabled")
-    public void returnsValueConvertingFilteredBySourceApplicationIds_whenUserPermissionsEnabled() {
+    @DisplayName("returns ValueConverting filtered by sourceApplicationIds")
+    public void returnsValueConvertingFilteredBySourceApplicationIds() {
         Set<Long> mockSourceApplicationIds = Set.of(1L, 2L);
         when(userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication)).thenReturn(mockSourceApplicationIds);
 
@@ -171,8 +171,8 @@ public class ValueConvertingControllerTest {
     }
 
     @Test
-    @DisplayName("posts ValueConverting with no validation errors and user permissions disabled")
-    public void postsValueConvertingSuccessfully_whenNoErrorsAndUserPermissionsDisabled() {
+    @DisplayName("posts ValueConverting with no validation errors")
+    public void postsValueConvertingSuccessfully_whenNoErrors() {
         ValueConvertingDto dto = ValueConvertingDto.builder().build();
         when(validator.validate(dto)).thenReturn(Collections.emptySet());
         when(valueConvertingService.save(dto)).thenReturn(dto);
@@ -185,24 +185,5 @@ public class ValueConvertingControllerTest {
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(dto);
-    }
-
-    @Test
-    @DisplayName("posts ValueConverting with no validation errors and user permissions enabled with access")
-    public void postsValueConvertingSuccessfully_whenNoErrorsAndUserPermissionsEnabledWithAccess() {
-        ValueConvertingDto valueConvertingDto = mock(ValueConvertingDto.class);
-        when(valueConvertingDto.getFromApplicationId()).thenReturn(2L);
-
-        when(validator.validate(valueConvertingDto)).thenReturn(Collections.emptySet());
-        when(valueConvertingService.save(valueConvertingDto)).thenReturn(valueConvertingDto);
-
-        ResponseEntity<ValueConvertingDto> response = getController()
-                .postValueConverting(authentication, valueConvertingDto);
-
-        verify(validator).validate(valueConvertingDto);
-        verify(valueConvertingService).save(valueConvertingDto);
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(valueConvertingDto);
     }
 }

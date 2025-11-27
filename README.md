@@ -7,7 +7,7 @@ Spring Boot (WebFlux + Data JPA) service that stores value-conversion maps betwe
 - **Reactive HTTP API** — Spring WebFlux controller for listing, fetching, and persisting conversion maps with pageable queries and optional payload trimming.
 - **PostgreSQL-backed store** — ValueConverting entities plus `converting_map` rows maintained through Flyway migrations.
 - **Kafka request/reply integration** — Request listener returns conversion details by ID on a short-lived topic, enabling orchestration services to avoid direct database access.
-- **Fine-grained authorization** — OAuth2 resource server w/ optional user-permissions consumer to filter results by the caller’s allowed source-application IDs.
+- **Fine-grained authorization** — OAuth2 resource server user-permissions consumer to filter results by the caller’s allowed source-application IDs.
 - **Operational guardrails** — Bean validation w/ friendly error formatting, standard Actuator endpoints, and Prometheus metrics out of the box.
 
 ## Architecture Overview
@@ -73,7 +73,6 @@ Spring profiles layered via application.yaml: flyt-kafka, flyt-resource-server, 
 | fint.database.{url,username,password}                      | PostgreSQL connection supplied as secrets per environment.                                     |
 | spring.datasource.hikari.schema                            | Schema namespace (per overlay) used for both JDBC and Flyway.                                 |
 | novari.kafka.topic.{org-id,domain-context}                 | Kafka naming segments; overlays override org-id to isolate ACLs.                            |
-| novari.flyt.resource-server.user-permissions-consumer.enabled | Enables the user-authorization filter that restricts results by fromApplicationId.      |
 | novari.flyt.resource-server.security.api.internal.*        | Restricts internal endpoints to approved org/role pairs (populated via overlays).             |
 | spring.security.oauth2.resourceserver.jwt.issuer-uri       | IdP issuer for JWT validation (default https://idp.felleskomponent.no/nidp/oauth/nam).      |
 | spring.kafka.bootstrap-servers                             | Kafka bootstrap list; local profile defaults to localhost:9092.                             |
@@ -131,7 +130,7 @@ Commit both the template changes and the regenerated overlay files.
 
 - OAuth2 resource server validates JWTs from https://idp.felleskomponent.no.
 - Internal endpoints (/internal/api/value-convertings/**) are protected by the shared flyt-resource-server filter set; overlays supply org/role mappings.
-- When novari.flyt.resource-server.user-permissions-consumer.enabled=true, UserAuthorizationService limits reads/writes to the caller’s authorized fromApplicationId set.
+- UserAuthorizationService limits reads/writes to the caller’s authorized fromApplicationId set.
 
 ## Observability & Operations
 
