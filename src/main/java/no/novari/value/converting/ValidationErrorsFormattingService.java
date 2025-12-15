@@ -1,8 +1,8 @@
-package no.fintlabs;
+package no.novari.value.converting;
 
+import jakarta.validation.ConstraintViolation;
 import org.springframework.stereotype.Service;
 
-import javax.validation.ConstraintViolation;
 import java.util.Set;
 import java.util.stream.Collectors;
 

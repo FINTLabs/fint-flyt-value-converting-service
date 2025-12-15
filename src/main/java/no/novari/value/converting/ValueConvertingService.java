@@ -1,13 +1,12 @@
-package no.fintlabs;
+package no.novari.value.converting;
 
-import no.fintlabs.model.ValueConvertingDto;
+import no.novari.value.converting.model.ValueConvertingDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
-
+import java.util.Set;
 
 @Service
 public class ValueConvertingService {
@@ -33,7 +32,7 @@ public class ValueConvertingService {
     public Page<ValueConvertingDto> findAllBySourceApplicationIds(
             Pageable pageable,
             boolean excludeConvertingMap,
-            List<Long> sourceApplicationIds
+            Set<Long> sourceApplicationIds
     ) {
         return valueConvertingRepository
                 .findAllByFromApplicationIdIn(pageable, sourceApplicationIds)

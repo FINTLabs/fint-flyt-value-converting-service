@@ -1,14 +1,16 @@
-package no.fintlabs;
+package no.novari.value.converting;
 
-import no.fintlabs.model.ValueConverting;
-import no.fintlabs.model.ValueConvertingDto;
+import no.novari.value.converting.model.ValueConverting;
+import no.novari.value.converting.model.ValueConvertingDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ValueConvertingMappingServiceTest {
     private ValueConvertingMappingService mappingService;

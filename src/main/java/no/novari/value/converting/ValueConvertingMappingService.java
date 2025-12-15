@@ -1,7 +1,7 @@
-package no.fintlabs;
+package no.novari.value.converting;
 
-import no.fintlabs.model.ValueConverting;
-import no.fintlabs.model.ValueConvertingDto;
+import no.novari.value.converting.model.ValueConverting;
+import no.novari.value.converting.model.ValueConvertingDto;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;

@@ -1,8 +1,10 @@
 fint:
   application-id: fint-flyt-value-converting-service
+
 server:
   error:
     include-message: always
+
 spring:
   profiles:
     include:
@@ -10,3 +12,7 @@ spring:
       - flyt-resource-server
       - flyt-postgres
       - flyt-logging
+
+  output:
+    ansi:
+      enabled: always
