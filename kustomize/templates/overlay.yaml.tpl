@@ -36,8 +36,14 @@ $AUTHORIZED_ORG_ROLE_PAIRS
          name: "novari.kafka.topic.orgId"
          value: "$NOVARI_KAFKA_TOPIC_ORGID"
       - op: replace
+        path: "/spec/probes/startup/path"
+        value: "$STARTUP_PATH"
+      - op: replace
         path: "/spec/probes/readiness/path"
         value: "$READINESS_PATH"
+      - op: replace
+        path: "/spec/probes/liveness/path"
+        value: "$LIVENESS_PATH"
       - op: replace
         path: "/spec/observability/metrics/path"
         value: "$METRICS_PATH"
@@ -45,4 +51,3 @@ $AUTHORIZED_ORG_ROLE_PAIRS
     target:
       kind: Application
       name: fint-flyt-value-converting-service
-
