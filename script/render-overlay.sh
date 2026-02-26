@@ -89,6 +89,7 @@ while IFS= read -r file; do
   export KAFKA_TOPIC="${namespace}.flyt.*"
   export URL_BASE_PATH="$path_prefix"
   export INGRESS_BASE_PATH="${path_prefix}/api/intern/value-convertings"
+  export SERVLET_CONTEXT_PATH="$path_prefix"
   export STARTUP_PATH="${path_prefix}/actuator/health"
   export READINESS_PATH="${path_prefix}/actuator/health/readiness"
   export LIVENESS_PATH="${path_prefix}/actuator/health/liveness"
@@ -105,7 +106,7 @@ while IFS= read -r file; do
   target_dir="$ROOT/kustomize/overlays/$dir"
 
   tmp="$(mktemp "$target_dir/.kustomization.yaml.XXXXXX")"
-  envsubst '$NAMESPACE $APP_INSTANCE_LABEL $ORG_ID $KAFKA_TOPIC $URL_BASE_PATH $INGRESS_BASE_PATH $STARTUP_PATH $READINESS_PATH $LIVENESS_PATH $METRICS_PATH $AUTHORIZED_ORG_ROLE_PAIRS $NOVARI_KAFKA_TOPIC_ORGID' \
+  envsubst '$NAMESPACE $APP_INSTANCE_LABEL $ORG_ID $KAFKA_TOPIC $URL_BASE_PATH $INGRESS_BASE_PATH $SERVLET_CONTEXT_PATH $STARTUP_PATH $READINESS_PATH $LIVENESS_PATH $METRICS_PATH $AUTHORIZED_ORG_ROLE_PAIRS $NOVARI_KAFKA_TOPIC_ORGID' \
     < "$template" > "$tmp"
   mv "$tmp" "$target_dir/kustomization.yaml"
 done < <(find "$ROOT/kustomize/overlays" -name kustomization.yaml -print | sort)
