@@ -11,6 +11,7 @@ metadata:
     app.kubernetes.io/part-of: fint-flyt
     fintlabs.no/team: flyt
     fintlabs.no/org-id: fintlabs.no
+
 spec:
   port: 8080
   imagePullPolicy: Always
