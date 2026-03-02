@@ -15,11 +15,9 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import org.springframework.core.MethodParameter
 import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
@@ -28,10 +26,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
-import org.springframework.web.bind.support.WebDataBinderFactory
-import org.springframework.web.context.request.NativeWebRequest
-import org.springframework.web.method.support.HandlerMethodArgumentResolver
-import org.springframework.web.method.support.ModelAndViewContainer
 
 @ExtendWith(MockitoExtension::class)
 class ValueConversionControllerWebMvcTest {
@@ -62,7 +56,6 @@ class ValueConversionControllerWebMvcTest {
                 .setControllerAdvice(GlobalExceptionHandler())
                 .setMessageConverters(MappingJackson2HttpMessageConverter(objectMapper))
                 .setValidator(validator)
-                .setCustomArgumentResolvers(authenticationPrincipalResolver())
                 .build()
     }
 
@@ -75,6 +68,7 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 post("/api/intern/value-convertings")
+                    .principal(authentication)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),
             ).andExpect(status().isOk)
@@ -104,6 +98,7 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 post("/api/intern/value-convertings")
+                    .principal(authentication)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody),
             ).andExpect(status().isUnprocessableEntity)
@@ -137,6 +132,7 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 post("/api/intern/value-convertings")
+                    .principal(authentication)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(requestBody),
             ).andExpect(status().isOk)
@@ -158,6 +154,7 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 post("/api/intern/value-convertings")
+                    .principal(authentication)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),
             ).andExpect(status().isUnprocessableEntity)
@@ -176,7 +173,10 @@ class ValueConversionControllerWebMvcTest {
         whenever(valueConversionService.findById(123L)).thenReturn(null)
 
         mockMvc
-            .perform(get("/api/intern/value-convertings/123"))
+            .perform(
+                get("/api/intern/value-convertings/123")
+                    .principal(authentication),
+            )
             .andExpect(status().isNotFound)
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
             .andExpect(jsonPath("$.title").value("Not Found"))
@@ -189,6 +189,7 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 get("/api/intern/value-convertings")
+                    .principal(authentication)
                     .queryParam("page", "0")
                     .queryParam("size", "0")
                     .queryParam("sortProperty", "id")
@@ -215,6 +216,7 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 get("/api/intern/value-convertings")
+                    .principal(authentication)
                     .queryParam("page", "0")
                     .queryParam("size", "10")
                     .queryParam("sortProperty", "unknownField")
@@ -224,24 +226,6 @@ class ValueConversionControllerWebMvcTest {
             .andExpect(jsonPath("$.title").value("Internal Server Error"))
             .andExpect(jsonPath("$.status").value(500))
             .andExpect(jsonPath("$.detail").value("Internal server error"))
-    }
-
-    private fun authenticationPrincipalResolver(): HandlerMethodArgumentResolver {
-        return object : HandlerMethodArgumentResolver {
-            override fun supportsParameter(parameter: MethodParameter): Boolean {
-                return parameter.parameterType == Authentication::class.java &&
-                    parameter.hasParameterAnnotation(AuthenticationPrincipal::class.java)
-            }
-
-            override fun resolveArgument(
-                parameter: MethodParameter,
-                mavContainer: ModelAndViewContainer?,
-                webRequest: NativeWebRequest,
-                binderFactory: WebDataBinderFactory?,
-            ): Any {
-                return authentication
-            }
-        }
     }
 
     private fun validRequest(): ValueConversionRequest {

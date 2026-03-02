@@ -14,7 +14,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.Authentication
-import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -33,7 +32,7 @@ class ValueConversionController(
 ) {
     @GetMapping
     fun getValueConversions(
-        @AuthenticationPrincipal authentication: Authentication,
+        authentication: Authentication,
         @RequestParam @Min(0) page: Int,
         @RequestParam @Min(1) @Max(1000) size: Int,
         @RequestParam sortProperty: String,
@@ -77,7 +76,7 @@ class ValueConversionController(
 
     @GetMapping("{valueConversionId}")
     fun getValueConversion(
-        @AuthenticationPrincipal authentication: Authentication,
+        authentication: Authentication,
         @PathVariable valueConversionId: Long,
     ): ValueConversionResponse {
         val valueConversion =
@@ -94,7 +93,7 @@ class ValueConversionController(
 
     @PostMapping
     fun postValueConversion(
-        @AuthenticationPrincipal authentication: Authentication,
+        authentication: Authentication,
         @Valid @RequestBody valueConversionRequest: ValueConversionRequest,
     ): ValueConversionResponse {
         userAuthorizationService.checkIfUserHasAccessToSourceApplication(
