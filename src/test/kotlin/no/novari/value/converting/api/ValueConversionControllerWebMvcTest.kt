@@ -176,8 +176,7 @@ class ValueConversionControllerWebMvcTest {
             .perform(
                 get("/api/intern/value-convertings/123")
                     .principal(authentication),
-            )
-            .andExpect(status().isNotFound)
+            ).andExpect(status().isNotFound)
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
             .andExpect(jsonPath("$.title").value("Not Found"))
             .andExpect(jsonPath("$.status").value(404))
