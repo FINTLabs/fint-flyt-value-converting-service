@@ -38,16 +38,18 @@ Query parameters for `GET /`:
 
 ```json
 {
-    "displayName": "FS -> ERP",     // required
-    "fromApplicationId": 1001,      // required, Long
-    "fromTypeId": "FS.Student",     // required
-    "toApplicationId": "erp",       // required
-    "toTypeId": "ERP.Student",      // required
-    "convertingMap": {              // required map<String,String>
+    "displayName": "FS -> ERP",
+    "fromApplicationId": 1001,
+    "fromTypeId": "FS.Student",
+    "toApplicationId": "erp",
+    "toTypeId": "ERP.Student",
+    "convertingMap": {
       "FS:STATE:ACTIVE": "ERP:STATUS:ENABLED"
     }
 }
 ```
+
+Required fields: `displayName`, `fromApplicationId` (`Long`), `fromTypeId`, `toApplicationId`, `toTypeId`, and `convertingMap` (`map<string,string>`).
 
 Unknown fields in `ValueConversionRequest` are ignored during deserialization.
 
