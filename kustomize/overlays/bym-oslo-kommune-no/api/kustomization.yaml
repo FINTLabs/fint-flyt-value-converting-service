@@ -7,8 +7,8 @@ resources:
 
 labels:
   - pairs:
-      app.kubernetes.io/instance: fint-flyt-value-converting-service_bym-oslo-kommune_no
-      fintlabs.no/org-id: bym-oslo-kommune.no
+      app.kubernetes.io/instance: fint-flyt-value-converting-service_bym-oslo-kommune-no
+      fintlabs.no/org-id: bym.oslo.kommune.no
 
 patches:
   - patch: |-
@@ -17,7 +17,7 @@ patches:
         value: "bym-oslo-kommune-no.flyt.*"
       - op: replace
         path: "/spec/orgId"
-        value: "bym-oslo-kommune.no"
+        value: "bym.oslo.kommune.no"
       - op: replace
         path: "/spec/ingress/basePath"
         value: "/bym-oslo-kommune-no/api/intern/value-convertings"
