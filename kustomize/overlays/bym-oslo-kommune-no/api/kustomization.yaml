@@ -7,7 +7,7 @@ resources:
 
 labels:
   - pairs:
-      app.kubernetes.io/instance: fint-flyt-value-converting-service_afk_no
+      app.kubernetes.io/instance: fint-flyt-value-converting-service_bym-oslo-kommune_no
       fintlabs.no/org-id: afk.no
 
 patches:
