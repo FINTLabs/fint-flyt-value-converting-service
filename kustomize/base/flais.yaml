@@ -28,10 +28,18 @@ spec:
     hostname: flyt.vigoiks.no
     basePath: ""
   ingress:
-    enabled: true
-    basePath: path
-    middlewares:
-      - fint-flyt-auth-forward-sso
+    routes:
+      # Bearer/M2M: requests som allerede bærer en Authorization-header rutes utenom
+      # SSO-middlewaren og treffer resource-serveren direkte.
+      - host: flyt.vigoiks.no
+        path: path
+        headers:
+          Authorization: "re:.+"
+      # Cookie/nettleser: alt annet håndteres av SSO-middlewaren (cookie -> Bearer).
+      - host: flyt.vigoiks.no
+        path: path
+        middlewares:
+          - fint-flyt-auth-forward-sso
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -Xmx576M -Xms384M'
