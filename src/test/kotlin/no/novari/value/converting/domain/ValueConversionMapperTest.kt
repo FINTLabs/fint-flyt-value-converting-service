@@ -150,4 +150,44 @@ class ValueConversionMapperTest {
         assertEquals(entity.toTypeId, response.toTypeId)
         assertEquals(entity.convertingMap, response.convertingMap)
     }
+
+    @Test
+    fun `mapping entity to response should include hydrated audit fields`() {
+        val entity =
+            ValueConversion(
+                displayName = "Test Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "fromType",
+                toApplicationId = "toAppId",
+                toTypeId = "toType",
+                convertingMap = hashMapOf(),
+            )
+
+        val response = mapper.toResponse(entity, false, "Ola Nordmann", "System")
+
+        assertEquals(entity.createdAt, response.createdAt)
+        assertEquals("Ola Nordmann", response.createdBy)
+        assertEquals(entity.createdBy, response.createdByActor)
+        assertEquals(entity.lastModifiedAt, response.lastModifiedAt)
+        assertEquals("System", response.lastModifiedBy)
+        assertEquals(entity.lastModifiedBy, response.lastModifiedByActor)
+    }
+
+    @Test
+    fun `mapping entity to response should default audit display names to null`() {
+        val entity =
+            ValueConversion(
+                displayName = "Test Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "fromType",
+                toApplicationId = "toAppId",
+                toTypeId = "toType",
+                convertingMap = hashMapOf(),
+            )
+
+        val response = mapper.toResponse(entity, false)
+
+        assertNull(response.createdBy)
+        assertNull(response.lastModifiedBy)
+    }
 }

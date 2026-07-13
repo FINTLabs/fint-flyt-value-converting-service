@@ -36,6 +36,8 @@ class ValueConversionMapper {
     fun toResponse(
         valueConversion: ValueConversion,
         includeConversionMap: Boolean,
+        createdByDisplay: String? = null,
+        lastModifiedByDisplay: String? = null,
     ): ValueConversionResponse {
         val valueConversionId = valueConversion.id
         return ValueConversionResponse(
@@ -51,6 +53,12 @@ class ValueConversionMapper {
             toApplicationId = requiredField(valueConversion.toApplicationId, "toApplicationId", valueConversionId),
             toTypeId = requiredField(valueConversion.toTypeId, "toTypeId", valueConversionId),
             convertingMap = if (includeConversionMap) valueConversion.convertingMap.toMap() else null,
+            createdAt = valueConversion.createdAt,
+            createdBy = createdByDisplay,
+            createdByActor = valueConversion.createdBy,
+            lastModifiedAt = valueConversion.lastModifiedAt,
+            lastModifiedBy = lastModifiedByDisplay,
+            lastModifiedByActor = valueConversion.lastModifiedBy,
         )
     }
 

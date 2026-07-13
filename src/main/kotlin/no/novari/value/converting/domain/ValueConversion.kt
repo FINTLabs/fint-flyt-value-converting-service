@@ -12,8 +12,11 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.MapKeyColumn
 import jakarta.persistence.Table
 import jakarta.validation.constraints.NotNull
+import no.novari.flyt.audit.entity.AuditedEntity
+import org.hibernate.envers.Audited
 
 @Entity
+@Audited
 @Table(name = "value_converting")
 class ValueConversion(
     @Id
@@ -39,4 +42,4 @@ class ValueConversion(
     @MapKeyColumn(name = "key")
     @Column(name = "value")
     var convertingMap: MutableMap<String, String> = mutableMapOf(),
-)
+) : AuditedEntity()

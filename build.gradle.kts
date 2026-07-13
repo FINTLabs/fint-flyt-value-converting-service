@@ -1,5 +1,5 @@
 plugins {
-    id("org.springframework.boot") version "3.5.15"
+    id("org.springframework.boot") version "3.5.16"
     id("io.spring.dependency-management") version "1.1.7"
     id("com.github.ben-manes.versions") version "0.54.0"
     id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
@@ -31,6 +31,7 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     compileOnly("org.springframework.security:spring-security-config")
@@ -40,6 +41,7 @@ dependencies {
 
     implementation("no.novari:flyt-web-resource-server:3.2.0")
     implementation("no.novari:flyt-kafka:7.0.0")
+    implementation("no.novari:flyt-audit-starter:1.1.0")
 
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
