@@ -204,7 +204,14 @@ class ValueConversionControllerWebMvcTest {
 
     @Test
     fun `getting value conversions with unknown sort property should return internal server error problem detail`() {
-        whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication)).thenReturn(setOf(1L))
+        val candidateSourceApplicationIds = setOf(1L)
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(candidateSourceApplicationIds)
         whenever(valueConversionService.findAllBySourceApplicationIds(any(), any(), any()))
             .thenThrow(
                 IllegalArgumentException(

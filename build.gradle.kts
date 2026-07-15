@@ -38,7 +38,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("no.novari:flyt-web-resource-server:3.2.0")
+    implementation("no.novari:flyt-web-resource-server:4.0.0-rc-1")
     implementation("no.novari:flyt-kafka:7.0.0")
 
     implementation("org.flywaydb:flyway-core")

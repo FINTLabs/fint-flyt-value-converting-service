@@ -7,7 +7,7 @@ Spring Boot (Web + Data JPA) service that stores value-conversion maps between F
 - **HTTP API** - Spring MVC controller for listing, fetching, and persisting conversion maps with pageable queries and optional payload trimming.
 - **PostgreSQL-backed store** - `ValueConversion` entities plus `converting_map` rows maintained through Flyway migrations.
 - **Kafka request/reply integration** — Request listener returns conversion details by ID on a short-lived topic, enabling orchestration services to avoid direct database access.
-- **Fine-grained authorization** — OAuth2 resource server user-permissions consumer to filter results by the caller’s allowed source-application IDs.
+- **Fine-grained authorization** — OAuth2 resource server plus authorization-service HTTP client filters results by the caller’s allowed source-application IDs.
 - **Operational guardrails** — Request validation through Kotlin nullability, standardized `ProblemDetail` error responses, standard Actuator endpoints, and Prometheus metrics out of the box.
 
 ## Architecture Overview
@@ -86,7 +86,8 @@ The service has no cron-style jobs; state is managed via HTTP and Kafka interact
 
 ## Configuration
 
-Spring profiles layered via application.yaml: flyt-kafka, flyt-web-resource-server, flyt-postgres, and flyt-logging.
+Spring profiles layered via application.yaml: flyt-kafka, flyt-web-resource-server,
+flyt-authorization-client, flyt-postgres, and flyt-logging.
 
 | Property                                                | Description                                                                            |
 |---------------------------------------------------------|----------------------------------------------------------------------------------------|
@@ -96,6 +97,7 @@ Spring profiles layered via application.yaml: flyt-kafka, flyt-web-resource-serv
 | novari.kafka.topic.{org-id,domain-context}              | Kafka naming segments; overlays override org-id to isolate ACLs.                       |
 | novari.flyt.web-resource-server.security.api.internal.* | Restricts internal endpoints to approved org/role pairs (populated via overlays).      |
 | spring.security.oauth2.resourceserver.jwt.issuer-uri    | IdP issuer for JWT validation (default https://idp.felleskomponent.no/nidp/oauth/nam). |
+| fint.flyt.authorization.sso.client-id / client-secret   | OAuth2 client credentials for authorization-service.                                 |
 | spring.kafka.bootstrap-servers                          | Kafka bootstrap list; local profile defaults to localhost:9092.                        |
 | server.port                                             | Defaults to 8094 under the local-staging profile.                                      |
 
@@ -151,7 +153,7 @@ Commit both the template changes and the regenerated overlay files.
 
 - OAuth2 resource server validates JWTs from https://idp.felleskomponent.no.
 - Internal endpoints (`/api/intern/value-convertings/**`) are protected by the shared flyt-web-resource-server filter set; overlays supply org/role mappings.
-- UserAuthorizationService limits reads/writes to the caller’s authorized fromApplicationId set.
+- UserAuthorizationService limits reads/writes to the caller’s authorized fromApplicationId set. The list endpoint first loads distinct source-application candidates from the database and authorizes them in a batch HTTP request.
 
 ## Observability & Operations
 
