@@ -1,11 +1,11 @@
 package no.novari
 
+import no.novari.flyt.audit.config.EnableFlytAuditing
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 
 @SpringBootApplication
-@EnableJpaAuditing
+@EnableFlytAuditing
 class Application
 
 fun main(args: Array<String>) {
