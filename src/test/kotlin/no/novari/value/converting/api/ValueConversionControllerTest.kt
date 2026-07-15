@@ -83,7 +83,9 @@ class ValueConversionControllerTest {
         whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication))
             .thenReturn(mockSourceApplicationIds)
 
+        val mockContent = listOf(mock<ValueConversionResponse>())
         val mockPage = mock<Page<ValueConversionResponse>>()
+        whenever(mockPage.content).thenReturn(mockContent)
         whenever(
             valueConversionService.findAllBySourceApplicationIds(
                 pageRequest,
@@ -110,7 +112,7 @@ class ValueConversionControllerTest {
             sourceApplicationIds = mockSourceApplicationIds,
         )
 
-        assertThat(response).isEqualTo(mockPage)
+        assertThat(response.content).isEqualTo(mockContent)
     }
 
     @Test

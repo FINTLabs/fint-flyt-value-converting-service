@@ -12,6 +12,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.HandlerMethodValidationException
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -74,6 +75,16 @@ class GlobalExceptionHandler {
             status = HttpStatus.INTERNAL_SERVER_ERROR,
             title = "Internal Server Error",
             detail = exception.message ?: "Internal data integrity violation",
+        )
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException::class)
+    fun handleMethodArgumentTypeMismatch(exception: MethodArgumentTypeMismatchException): ProblemDetail {
+        logger.warn("Request parameter type mismatch", exception)
+        return createProblemDetail(
+            status = HttpStatus.BAD_REQUEST,
+            title = "Bad Request",
+            detail = "Invalid value for request parameter '${exception.name}'",
         )
     }
 
