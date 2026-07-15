@@ -79,9 +79,15 @@ class ValueConversionControllerTest {
     @Test
     @DisplayName("returns value conversions filtered by source application IDs")
     fun `getting value conversions should filter by source application ids`() {
+        val candidateSourceApplicationIds = setOf(1L, 2L, 3L)
         val mockSourceApplicationIds = setOf(1L, 2L)
-        whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication))
-            .thenReturn(mockSourceApplicationIds)
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(mockSourceApplicationIds)
 
         val mockContent = listOf(mock<ValueConversionResponse>())
         val mockPage = mock<Page<ValueConversionResponse>>()
@@ -105,7 +111,11 @@ class ValueConversionControllerTest {
                     excludeConversionMap = true,
                 )
 
-        verify(userAuthorizationService).getUserAuthorizedSourceApplicationIds(authentication)
+        verify(valueConversionService).findDistinctSourceApplicationIds()
+        verify(userAuthorizationService).getUserAuthorizedSourceApplicationIds(
+            authentication,
+            candidateSourceApplicationIds,
+        )
         verify(valueConversionService).findAllBySourceApplicationIds(
             pageable = pageRequest,
             includeConversionMap = false,

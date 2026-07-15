@@ -13,6 +13,8 @@ class ValueConversionService(
     private val valueConversionMapper: ValueConversionMapper,
     private val valueConversionRepository: ValueConversionRepository,
 ) {
+    fun findDistinctSourceApplicationIds(): Set<Long> = valueConversionRepository.findDistinctSourceApplicationIds()
+
     fun findAllBySourceApplicationIds(
         pageable: Pageable,
         includeConversionMap: Boolean,
