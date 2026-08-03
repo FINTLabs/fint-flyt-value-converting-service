@@ -5,12 +5,12 @@ import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
 import no.novari.flyt.webresourceserver.UrlPaths.INTERNAL_API
 import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
+import no.novari.value.converting.api.dto.ValueConversionPageResponse
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.api.exception.InvalidRequestParameterException
 import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.application.ValueConversionService
-import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.security.core.Authentication
@@ -39,7 +39,7 @@ class ValueConversionController(
         @RequestParam sortDirection: Sort.Direction,
         @RequestParam(name = "excludeConvertingMap", required = false, defaultValue = "false") excludeConversionMap:
             Boolean,
-    ): Page<ValueConversionResponse> {
+    ): ValueConversionPageResponse {
         validatePage(page)
         validateSize(size)
 
@@ -52,11 +52,14 @@ class ValueConversionController(
             userAuthorizationService
                 .getUserAuthorizedSourceApplicationIds(authentication)
 
-        return valueConversionService.findAllBySourceApplicationIds(
-            pageable = pageRequest,
-            includeConversionMap = !excludeConversionMap,
-            sourceApplicationIds = sourceApplicationIds,
-        )
+        val valueConversions =
+            valueConversionService.findAllBySourceApplicationIds(
+                pageable = pageRequest,
+                includeConversionMap = !excludeConversionMap,
+                sourceApplicationIds = sourceApplicationIds,
+            )
+
+        return ValueConversionPageResponse(content = valueConversions.content)
     }
 
     private fun validateSize(size: Int) {
