@@ -9,9 +9,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.method.annotation.HandlerMethodValidationException
+import org.springframework.web.server.ResponseStatusException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
@@ -54,6 +56,27 @@ class GlobalExceptionHandler {
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
             detail = exception.message ?: "Validation error: invalid request parameters",
+        )
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException::class)
+    fun handleMissingServletRequestParameter(exception: MissingServletRequestParameterException): ProblemDetail {
+        logger.warn("Missing request parameter", exception)
+        return createProblemDetail(
+            status = HttpStatus.BAD_REQUEST,
+            title = "Bad Request",
+            detail = "Validation error: '${exception.parameterName}' is required",
+        )
+    }
+
+    @ExceptionHandler(ResponseStatusException::class)
+    fun handleResponseStatusException(exception: ResponseStatusException): ProblemDetail {
+        val status = HttpStatus.valueOf(exception.statusCode.value())
+        logger.warn("Request rejected with response status", exception)
+        return createProblemDetail(
+            status = status,
+            title = status.reasonPhrase,
+            detail = exception.reason ?: status.reasonPhrase,
         )
     }
 

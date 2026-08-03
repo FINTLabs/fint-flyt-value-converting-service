@@ -203,6 +203,24 @@ class ValueConversionControllerWebMvcTest {
     }
 
     @Test
+    fun `getting value conversions without required page should return bad request problem detail`() {
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("size", "10")
+                    .queryParam("sortProperty", "id")
+                    .queryParam("sortDirection", "ASC"),
+            ).andExpect(status().isBadRequest)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.detail").value("Validation error: 'page' is required"))
+
+        verifyNoInteractions(userAuthorizationService, valueConversionService)
+    }
+
+    @Test
     fun `getting value conversions with unknown sort property should return internal server error problem detail`() {
         whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication)).thenReturn(setOf(1L))
         whenever(valueConversionService.findAllBySourceApplicationIds(any(), any(), any()))
