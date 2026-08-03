@@ -4,7 +4,7 @@ import no.novari.flyt.audit.history.AuditPropertyFilter
 import no.novari.flyt.audit.web.HistoryControllerSupport
 import no.novari.flyt.webresourceserver.UrlPaths.INTERNAL_API
 import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
-import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.dto.ValueConversionSnapshot
 import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionHistoryService
@@ -19,7 +19,7 @@ class ValueConversionHistoryController(
     private val valueConversionRepository: ValueConversionRepository,
     private val userAuthorizationService: UserAuthorizationService,
     historyService: ValueConversionHistoryService,
-) : HistoryControllerSupport<ValueConversion, Long, ValueConversionResponse>(historyService) {
+) : HistoryControllerSupport<ValueConversion, Long, ValueConversionSnapshot>(historyService) {
     public override fun checkAccess(
         authentication: Authentication,
         id: Long,

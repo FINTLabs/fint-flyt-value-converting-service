@@ -5,6 +5,7 @@ import no.novari.flyt.audit.history.EntityHistoryEntryDto
 import no.novari.flyt.audit.history.HistoryEntryDto
 import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
 import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.dto.ValueConversionSnapshot
 import no.novari.value.converting.application.ValueConversionService
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionHistoryService
@@ -76,7 +77,7 @@ class ValueConversionHistoryRoutingWebMvcTest {
     fun `GET history routes to allHistory and not to getValueConversion`() {
         whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(any())).thenReturn(setOf(1L))
         whenever(valueConversionHistoryService.findAllHistory(any(), any(), any()))
-            .thenReturn(PageImpl(emptyList<EntityHistoryEntryDto<ValueConversionResponse, Long>>()))
+            .thenReturn(PageImpl(emptyList<EntityHistoryEntryDto<ValueConversionSnapshot, Long>>()))
 
         mockMvc
             .perform(get("/api/intern/value-convertings/history").principal(authentication))
@@ -91,7 +92,7 @@ class ValueConversionHistoryRoutingWebMvcTest {
         whenever(valueConversionRepository.findById(5L))
             .thenReturn(Optional.of(ValueConversion(id = 5L, fromApplicationId = 1L)))
         whenever(valueConversionHistoryService.findHistory(eq(5L), any(), any()))
-            .thenReturn(PageImpl(emptyList<HistoryEntryDto<ValueConversionResponse>>()))
+            .thenReturn(PageImpl(emptyList<HistoryEntryDto<ValueConversionSnapshot>>()))
 
         mockMvc
             .perform(get("/api/intern/value-convertings/5/history").principal(authentication))

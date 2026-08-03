@@ -2,6 +2,7 @@ package no.novari.value.converting.domain
 
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.dto.ValueConversionSnapshot
 import no.novari.value.converting.api.exception.ValueConversionDataIntegrityException
 import no.novari.value.converting.api.exception.ValueConversionValidationException
 import org.springframework.stereotype.Component
@@ -59,6 +60,24 @@ class ValueConversionMapper {
             lastModifiedAt = valueConversion.lastModifiedAt,
             lastModifiedBy = lastModifiedByDisplay,
             lastModifiedByActor = valueConversion.lastModifiedBy,
+        )
+    }
+
+    fun toSnapshot(valueConversion: ValueConversion): ValueConversionSnapshot {
+        val valueConversionId = valueConversion.id
+        return ValueConversionSnapshot(
+            id = valueConversionId,
+            displayName = requiredField(valueConversion.displayName, "displayName", valueConversionId),
+            fromApplicationId =
+                requiredField(
+                    valueConversion.fromApplicationId,
+                    "fromApplicationId",
+                    valueConversionId,
+                ),
+            fromTypeId = requiredField(valueConversion.fromTypeId, "fromTypeId", valueConversionId),
+            toApplicationId = requiredField(valueConversion.toApplicationId, "toApplicationId", valueConversionId),
+            toTypeId = requiredField(valueConversion.toTypeId, "toTypeId", valueConversionId),
+            convertingMap = valueConversion.convertingMap.toMap(),
         )
     }
 
