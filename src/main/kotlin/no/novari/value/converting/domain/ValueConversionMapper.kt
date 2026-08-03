@@ -2,6 +2,7 @@ package no.novari.value.converting.domain
 
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.dto.ValueConversionSnapshot
 import no.novari.value.converting.api.exception.ValueConversionDataIntegrityException
 import no.novari.value.converting.api.exception.ValueConversionValidationException
 import org.springframework.stereotype.Component
@@ -36,6 +37,8 @@ class ValueConversionMapper {
     fun toResponse(
         valueConversion: ValueConversion,
         includeConversionMap: Boolean,
+        createdByDisplay: String? = null,
+        lastModifiedByDisplay: String? = null,
     ): ValueConversionResponse {
         val valueConversionId = valueConversion.id
         return ValueConversionResponse(
@@ -51,6 +54,30 @@ class ValueConversionMapper {
             toApplicationId = requiredField(valueConversion.toApplicationId, "toApplicationId", valueConversionId),
             toTypeId = requiredField(valueConversion.toTypeId, "toTypeId", valueConversionId),
             convertingMap = if (includeConversionMap) valueConversion.convertingMap.toMap() else null,
+            createdAt = valueConversion.createdAt,
+            createdBy = createdByDisplay,
+            createdByActor = valueConversion.createdBy,
+            lastModifiedAt = valueConversion.lastModifiedAt,
+            lastModifiedBy = lastModifiedByDisplay,
+            lastModifiedByActor = valueConversion.lastModifiedBy,
+        )
+    }
+
+    fun toSnapshot(valueConversion: ValueConversion): ValueConversionSnapshot {
+        val valueConversionId = valueConversion.id
+        return ValueConversionSnapshot(
+            id = valueConversionId,
+            displayName = requiredField(valueConversion.displayName, "displayName", valueConversionId),
+            fromApplicationId =
+                requiredField(
+                    valueConversion.fromApplicationId,
+                    "fromApplicationId",
+                    valueConversionId,
+                ),
+            fromTypeId = requiredField(valueConversion.fromTypeId, "fromTypeId", valueConversionId),
+            toApplicationId = requiredField(valueConversion.toApplicationId, "toApplicationId", valueConversionId),
+            toTypeId = requiredField(valueConversion.toTypeId, "toTypeId", valueConversionId),
+            convertingMap = valueConversion.convertingMap.toMap(),
         )
     }
 

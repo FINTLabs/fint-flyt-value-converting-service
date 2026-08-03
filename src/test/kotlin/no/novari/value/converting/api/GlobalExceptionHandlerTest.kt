@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.mock.http.MockHttpInputMessage
+import org.springframework.web.bind.MissingServletRequestParameterException
+import org.springframework.web.server.ResponseStatusException
 
 class GlobalExceptionHandlerTest {
     private val globalExceptionHandler = GlobalExceptionHandler()
@@ -91,5 +93,34 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), problemDetail.status)
         assertEquals("Bad Request", problemDetail.title)
         assertEquals("Validation error: 'size' must be greater than or equal to 1", problemDetail.detail)
+    }
+
+    @Test
+    fun `handling missing request parameter should return bad request problem detail`() {
+        val exception = MissingServletRequestParameterException("page", "int")
+
+        val problemDetail = globalExceptionHandler.handleMissingServletRequestParameter(exception)
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), problemDetail.status)
+        assertEquals("Bad Request", problemDetail.title)
+        assertEquals("Validation error: 'page' is required", problemDetail.detail)
+    }
+
+    @Test
+    fun `handling response status exception should preserve status and reason`() {
+        val exception =
+            ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access or modify data that is related to source application with id=3",
+            )
+
+        val problemDetail = globalExceptionHandler.handleResponseStatusException(exception)
+
+        assertEquals(HttpStatus.FORBIDDEN.value(), problemDetail.status)
+        assertEquals("Forbidden", problemDetail.title)
+        assertEquals(
+            "You do not have permission to access or modify data that is related to source application with id=3",
+            problemDetail.detail,
+        )
     }
 }

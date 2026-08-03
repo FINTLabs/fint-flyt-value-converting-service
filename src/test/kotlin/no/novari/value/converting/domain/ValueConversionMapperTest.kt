@@ -150,4 +150,69 @@ class ValueConversionMapperTest {
         assertEquals(entity.toTypeId, response.toTypeId)
         assertEquals(entity.convertingMap, response.convertingMap)
     }
+
+    @Test
+    fun `mapping entity to response should include hydrated audit fields`() {
+        val entity =
+            ValueConversion(
+                displayName = "Test Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "fromType",
+                toApplicationId = "toAppId",
+                toTypeId = "toType",
+                convertingMap = hashMapOf(),
+            )
+
+        val response = mapper.toResponse(entity, false, "Ola Nordmann", "System")
+
+        assertEquals(entity.createdAt, response.createdAt)
+        assertEquals("Ola Nordmann", response.createdBy)
+        assertEquals(entity.createdBy, response.createdByActor)
+        assertEquals(entity.lastModifiedAt, response.lastModifiedAt)
+        assertEquals("System", response.lastModifiedBy)
+        assertEquals(entity.lastModifiedBy, response.lastModifiedByActor)
+    }
+
+    @Test
+    fun `mapping entity to response should default audit display names to null`() {
+        val entity =
+            ValueConversion(
+                displayName = "Test Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "fromType",
+                toApplicationId = "toAppId",
+                toTypeId = "toType",
+                convertingMap = hashMapOf(),
+            )
+
+        val response = mapper.toResponse(entity, false)
+
+        assertNull(response.createdBy)
+        assertNull(response.lastModifiedBy)
+    }
+
+    @Test
+    fun `mapping entity to snapshot should map business fields including converting map`() {
+        val convertingMap = hashMapOf("key1" to "value1")
+        val entity =
+            ValueConversion(
+                id = 7L,
+                displayName = "Test Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "fromType",
+                toApplicationId = "toAppId",
+                toTypeId = "toType",
+                convertingMap = convertingMap,
+            )
+
+        val snapshot = mapper.toSnapshot(entity)
+
+        assertEquals(7L, snapshot.id)
+        assertEquals(entity.displayName, snapshot.displayName)
+        assertEquals(entity.fromApplicationId, snapshot.fromApplicationId)
+        assertEquals(entity.fromTypeId, snapshot.fromTypeId)
+        assertEquals(entity.toApplicationId, snapshot.toApplicationId)
+        assertEquals(entity.toTypeId, snapshot.toTypeId)
+        assertEquals(convertingMap, snapshot.convertingMap)
+    }
 }

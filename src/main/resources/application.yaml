@@ -12,6 +12,7 @@ spring:
       - flyt-web-resource-server
       - flyt-postgres
       - flyt-logging
+      - flyt-authorization-client
 
   output:
     ansi:

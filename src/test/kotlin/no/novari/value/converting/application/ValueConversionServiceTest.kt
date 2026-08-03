@@ -1,5 +1,6 @@
 package no.novari.value.converting.application
 
+import no.novari.flyt.audit.actor.ActorDisplayResolver
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.domain.ValueConversion
@@ -13,6 +14,7 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
@@ -28,6 +30,9 @@ class ValueConversionServiceTest {
 
     @Mock
     private lateinit var valueConversionRepository: ValueConversionRepository
+
+    @Mock
+    private lateinit var actorDisplayResolver: ActorDisplayResolver
 
     @InjectMocks
     private lateinit var service: ValueConversionService
@@ -63,7 +68,10 @@ class ValueConversionServiceTest {
 
         whenever(valueConversionRepository.findAllByFromApplicationIdIn(pageable, sourceApplicationIds))
             .thenReturn(valueConversionPage)
-        whenever(valueConversionMapper.toResponse(valueConversion, includeConversionMap)).thenReturn(response)
+        whenever(actorDisplayResolver.resolveAll(any())).thenReturn(emptyMap())
+        whenever(
+            valueConversionMapper.toResponse(eq(valueConversion), eq(includeConversionMap), anyOrNull(), anyOrNull()),
+        ).thenReturn(response)
 
         val actualPage = service.findAllBySourceApplicationIds(pageable, includeConversionMap, sourceApplicationIds)
 
@@ -76,12 +84,13 @@ class ValueConversionServiceTest {
         val valueConversionId = 1L
         val expectedResponse = mock<ValueConversionResponse>()
         whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.of(mock<ValueConversion>()))
-        whenever(valueConversionMapper.toResponse(any(), any())).thenReturn(expectedResponse)
+        whenever(actorDisplayResolver.resolve(anyOrNull())).thenReturn(null)
+        whenever(valueConversionMapper.toResponse(any(), any(), anyOrNull(), anyOrNull())).thenReturn(expectedResponse)
 
         val result = service.findById(valueConversionId)
 
         verify(valueConversionRepository).findById(valueConversionId)
-        verify(valueConversionMapper).toResponse(any(), eq(true))
+        verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
         assertEquals(expectedResponse, result)
     }
 
@@ -105,13 +114,14 @@ class ValueConversionServiceTest {
 
         whenever(valueConversionMapper.toEntity(request)).thenReturn(entity)
         whenever(valueConversionRepository.save(any<ValueConversion>())).thenReturn(savedValueConversion)
-        whenever(valueConversionMapper.toResponse(any(), any())).thenReturn(expectedResponse)
+        whenever(actorDisplayResolver.resolve(anyOrNull())).thenReturn(null)
+        whenever(valueConversionMapper.toResponse(any(), any(), anyOrNull(), anyOrNull())).thenReturn(expectedResponse)
 
         val result = service.save(request)
 
         verify(valueConversionMapper).toEntity(request)
         verify(valueConversionRepository).save(any<ValueConversion>())
-        verify(valueConversionMapper).toResponse(any(), eq(true))
+        verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
         assertEquals(expectedResponse, result)
     }
 }
