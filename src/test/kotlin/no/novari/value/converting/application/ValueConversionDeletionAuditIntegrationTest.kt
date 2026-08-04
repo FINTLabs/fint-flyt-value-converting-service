@@ -1,24 +1,16 @@
 package no.novari.value.converting.application
 
-import no.novari.flyt.audit.actor.Actor
-import no.novari.flyt.audit.actor.ActorAuditorAware
-import no.novari.flyt.audit.actor.ActorDisplayResolver
-import no.novari.flyt.audit.config.ApplicationContextHolder
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionMapper
 import no.novari.value.converting.infrastructure.persistence.ValueConversionRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.mock
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.orm.jpa.HibernatePropertiesCustomizer
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.boot.test.context.TestConfiguration
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Import
-import org.springframework.data.domain.AuditorAware
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.security.authentication.TestingAuthenticationToken
@@ -67,6 +59,9 @@ class ValueConversionDeletionAuditIntegrationTest {
 
     @Test
     fun `deleting value conversion should remove converting map rows and write delete audit revisions`() {
+        val actorId = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        setAuthenticatedUser(actorId)
+
         val valueConversion =
             valueConversionRepository.saveAndFlush(
                 ValueConversion(
@@ -79,8 +74,6 @@ class ValueConversionDeletionAuditIntegrationTest {
                 ),
             )
         val valueConversionId = checkNotNull(valueConversion.id)
-        val actorId = UUID.fromString("11111111-1111-1111-1111-111111111111")
-        setAuthenticatedUser(actorId)
 
         valueConversionService.delete(valueConversionId)
 
@@ -155,28 +148,13 @@ class ValueConversionDeletionAuditIntegrationTest {
                 .claim("objectidentifier", actorId.toString())
                 .build()
         val context = SecurityContextHolder.createEmptyContext()
-        context.authentication = TestingAuthenticationToken(jwt, "credentials")
+        context.authentication = TestingAuthenticationToken(jwt, "credentials", "ROLE_TEST")
         SecurityContextHolder.setContext(context)
     }
 
     @TestConfiguration
     @EnableJpaAuditing(auditorAwareRef = "flytAuditorAware")
-    class AuditTestConfiguration {
-        @Bean("flytAuditorAware")
-        fun flytAuditorAware(): AuditorAware<Actor> = ActorAuditorAware()
-
-        @Bean
-        fun applicationContextHolder() = ApplicationContextHolder()
-
-        @Bean
-        fun actorDisplayResolver(): ActorDisplayResolver = mock()
-
-        @Bean
-        fun enversStoreDataAtDeleteCustomizer(): HibernatePropertiesCustomizer =
-            HibernatePropertiesCustomizer { properties ->
-                properties.putIfAbsent("org.hibernate.envers.store_data_at_delete", "true")
-            }
-    }
+    class AuditTestConfiguration
 
     companion object {
         @Container
