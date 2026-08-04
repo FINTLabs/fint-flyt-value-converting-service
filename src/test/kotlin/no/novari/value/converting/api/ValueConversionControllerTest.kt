@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.Page
@@ -156,6 +157,51 @@ class ValueConversionControllerTest {
             .isInstanceOf(ValueConversionNotFoundException::class.java)
 
         verify(valueConversionService).findById(1L)
+    }
+
+    @Test
+    @DisplayName("deletes value conversion if found and user has access")
+    fun `deleting value conversion should delete conversion when found and user has access`() {
+        whenever(valueConversionService.findById(1L)).thenReturn(validResponse(id = 1L, fromApplicationId = 2L))
+
+        getController().deleteValueConversion(authentication, 1L)
+
+        verify(valueConversionService).findById(1L)
+        verify(userAuthorizationService).checkIfUserHasAccessToSourceApplication(authentication, 2L)
+        verify(valueConversionService).delete(1L)
+    }
+
+    @Test
+    @DisplayName("throws not found when deleting missing value conversion")
+    fun `deleting value conversion should throw not found when conversion is missing`() {
+        whenever(valueConversionService.findById(1L)).thenReturn(null)
+
+        assertThatThrownBy { getController().deleteValueConversion(authentication, 1L) }
+            .isInstanceOf(ValueConversionNotFoundException::class.java)
+
+        verify(valueConversionService).findById(1L)
+        verify(userAuthorizationService, never()).checkIfUserHasAccessToSourceApplication(any(), any())
+        verify(valueConversionService, never()).delete(any())
+    }
+
+    @Test
+    @DisplayName("throws forbidden when deleting value conversion without access")
+    fun `deleting value conversion should throw forbidden when user has no access`() {
+        doThrow(ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden"))
+            .whenever(userAuthorizationService)
+            .checkIfUserHasAccessToSourceApplication(authentication, 1L)
+
+        whenever(valueConversionService.findById(1L))
+            .thenReturn(validResponse(fromApplicationId = 1L))
+
+        assertThatThrownBy { getController().deleteValueConversion(authentication, 1L) }
+            .isInstanceOf(ResponseStatusException::class.java)
+            .hasFieldOrPropertyWithValue("statusCode", HttpStatus.FORBIDDEN)
+            .hasMessageContaining("Forbidden")
+
+        verify(userAuthorizationService).checkIfUserHasAccessToSourceApplication(authentication, 1L)
+        verify(valueConversionService).findById(1L)
+        verify(valueConversionService, never()).delete(any())
     }
 
     @Test
