@@ -3,11 +3,13 @@ package no.novari.value.converting.application
 import no.novari.flyt.audit.actor.ActorDisplayResolver
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionMapper
 import no.novari.value.converting.infrastructure.persistence.ValueConversionRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
@@ -17,6 +19,7 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
@@ -123,5 +126,39 @@ class ValueConversionServiceTest {
         verify(valueConversionRepository).save(any<ValueConversion>())
         verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
         assertEquals(expectedResponse, result)
+    }
+
+    @Test
+    fun `deleting existing value conversion should delete entity`() {
+        val valueConversionId = 1L
+        val valueConversion =
+            ValueConversion(
+                id = valueConversionId,
+                displayName = "displayName",
+                fromApplicationId = 2L,
+                fromTypeId = "fromTypeId",
+                toApplicationId = "toApplicationId",
+                toTypeId = "toTypeId",
+                convertingMap = hashMapOf("A" to "B"),
+            )
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.of(valueConversion))
+
+        service.delete(valueConversionId)
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionRepository).delete(valueConversion)
+    }
+
+    @Test
+    fun `deleting non existing value conversion should throw not found`() {
+        val valueConversionId = 1L
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.empty())
+
+        assertThrows(ValueConversionNotFoundException::class.java) {
+            service.delete(valueConversionId)
+        }
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionRepository, never()).delete(any<ValueConversion>())
     }
 }

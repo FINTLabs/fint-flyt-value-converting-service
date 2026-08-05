@@ -12,13 +12,17 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doThrow
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.security.core.Authentication
 import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
@@ -26,6 +30,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPat
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
+import org.springframework.web.server.ResponseStatusException
 
 @ExtendWith(MockitoExtension::class)
 class ValueConversionControllerWebMvcTest {
@@ -181,6 +186,68 @@ class ValueConversionControllerWebMvcTest {
             .andExpect(jsonPath("$.title").value("Not Found"))
             .andExpect(jsonPath("$.status").value(404))
             .andExpect(jsonPath("$.detail").value("Value conversion with id=123 was not found"))
+    }
+
+    @Test
+    fun `deleting value conversion should return no content`() {
+        whenever(valueConversionService.findById(1L)).thenReturn(validResponse())
+
+        mockMvc
+            .perform(
+                delete("/api/intern/value-convertings/1")
+                    .principal(authentication),
+            ).andExpect(status().isNoContent)
+            .andExpect(content().string(""))
+
+        verify(userAuthorizationService).checkIfUserHasAccessToSourceApplication(authentication, 1L)
+        verify(valueConversionService).delete(1L)
+    }
+
+    @Test
+    fun `deleting value conversion with unknown id should return not found problem detail`() {
+        whenever(valueConversionService.findById(123L)).thenReturn(null)
+
+        mockMvc
+            .perform(
+                delete("/api/intern/value-convertings/123")
+                    .principal(authentication),
+            ).andExpect(status().isNotFound)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Not Found"))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.detail").value("Value conversion with id=123 was not found"))
+
+        verify(valueConversionService, never()).delete(any())
+    }
+
+    @Test
+    fun `deleting value conversion without source application access should return forbidden problem detail`() {
+        whenever(valueConversionService.findById(1L)).thenReturn(validResponse())
+        doThrow(
+            ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access or modify data that is related to source application with id=1",
+            ),
+        ).whenever(userAuthorizationService)
+            .checkIfUserHasAccessToSourceApplication(authentication, 1L)
+
+        mockMvc
+            .perform(
+                delete("/api/intern/value-convertings/1")
+                    .principal(authentication),
+            ).andExpect(status().isForbidden)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Forbidden"))
+            .andExpect(jsonPath("$.status").value(403))
+            .andExpect(
+                jsonPath("$.detail")
+                    .value(
+                        "You do not have permission to access or modify data that is related to source application " +
+                            "with id=1",
+                    ),
+            )
+
+        verify(valueConversionService, never()).delete(any())
     }
 
     @Test

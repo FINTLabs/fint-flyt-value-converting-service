@@ -3,12 +3,14 @@ package no.novari.value.converting.application
 import no.novari.flyt.audit.actor.ActorDisplayResolver
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionMapper
 import no.novari.value.converting.infrastructure.persistence.ValueConversionRepository
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ValueConversionService(
@@ -45,6 +47,16 @@ class ValueConversionService(
     fun save(request: ValueConversionRequest): ValueConversionResponse {
         val saved = valueConversionRepository.save(valueConversionMapper.toEntity(request))
         return toHydratedResponse(saved)
+    }
+
+    @Transactional
+    fun delete(valueConversionId: Long) {
+        val valueConversion =
+            valueConversionRepository
+                .findById(valueConversionId)
+                .orElseThrow { ValueConversionNotFoundException(valueConversionId) }
+
+        valueConversionRepository.delete(valueConversion)
     }
 
     private fun toHydratedResponse(valueConversion: ValueConversion) =
