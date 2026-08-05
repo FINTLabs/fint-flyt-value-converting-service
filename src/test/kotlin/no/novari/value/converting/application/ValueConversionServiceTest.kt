@@ -129,6 +129,43 @@ class ValueConversionServiceTest {
     }
 
     @Test
+    fun `updating existing value conversion should update entity and return saved response`() {
+        val valueConversionId = 1L
+        val request = mock<ValueConversionRequest>()
+        val existingValueConversion = mock<ValueConversion>()
+        val savedValueConversion = mock<ValueConversion>()
+        val expectedResponse = mock<ValueConversionResponse>()
+
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.of(existingValueConversion))
+        whenever(valueConversionRepository.save(existingValueConversion)).thenReturn(savedValueConversion)
+        whenever(actorDisplayResolver.resolve(anyOrNull())).thenReturn(null)
+        whenever(valueConversionMapper.toResponse(any(), any(), anyOrNull(), anyOrNull())).thenReturn(expectedResponse)
+
+        val result = service.update(valueConversionId, request)
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionMapper).updateEntity(existingValueConversion, request)
+        verify(valueConversionRepository).save(existingValueConversion)
+        verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
+        assertEquals(expectedResponse, result)
+    }
+
+    @Test
+    fun `updating non existing value conversion should throw not found`() {
+        val valueConversionId = 1L
+        val request = mock<ValueConversionRequest>()
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.empty())
+
+        assertThrows(ValueConversionNotFoundException::class.java) {
+            service.update(valueConversionId, request)
+        }
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionMapper, never()).updateEntity(any(), any())
+        verify(valueConversionRepository, never()).save(any<ValueConversion>())
+    }
+
+    @Test
     fun `deleting existing value conversion should delete entity`() {
         val valueConversionId = 1L
         val valueConversion =

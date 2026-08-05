@@ -96,6 +96,82 @@ class ValueConversionMapperTest {
     }
 
     @Test
+    fun `updating entity from request should keep id and replace converting map`() {
+        val entity =
+            ValueConversion(
+                id = 7L,
+                displayName = "Old Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "oldFromType",
+                toApplicationId = "oldToAppId",
+                toTypeId = "oldToType",
+                convertingMap = mutableMapOf("oldKey" to "oldValue", "removedKey" to "removedValue"),
+            )
+        val request =
+            ValueConversionRequest(
+                displayName = "Updated Display Name",
+                fromApplicationId = 2L,
+                fromTypeId = "updatedFromType",
+                toApplicationId = "updatedToAppId",
+                toTypeId = "updatedToType",
+                convertingMap = mapOf(" newKey " to " newValue "),
+            )
+
+        val updatedEntity = mapper.updateEntity(entity, request)
+
+        assertEquals(7L, updatedEntity.id)
+        assertEquals(request.displayName, updatedEntity.displayName)
+        assertEquals(request.fromApplicationId, updatedEntity.fromApplicationId)
+        assertEquals(request.fromTypeId, updatedEntity.fromTypeId)
+        assertEquals(request.toApplicationId, updatedEntity.toApplicationId)
+        assertEquals(request.toTypeId, updatedEntity.toTypeId)
+        assertEquals(mapOf("newKey" to "newValue"), updatedEntity.convertingMap)
+    }
+
+    @Test
+    fun `updating entity from request should throw when trimmed map keys collide`() {
+        val entity =
+            ValueConversion(
+                id = 7L,
+                displayName = "Old Display Name",
+                fromApplicationId = 1L,
+                fromTypeId = "oldFromType",
+                toApplicationId = "oldToAppId",
+                toTypeId = "oldToType",
+                convertingMap = mutableMapOf("oldKey" to "oldValue"),
+            )
+        val request =
+            ValueConversionRequest(
+                displayName = "Updated Display Name",
+                fromApplicationId = 2L,
+                fromTypeId = "updatedFromType",
+                toApplicationId = "updatedToAppId",
+                toTypeId = "updatedToType",
+                convertingMap =
+                    mapOf(
+                        "Key " to "value1",
+                        " Key" to "value2",
+                    ),
+            )
+
+        val exception =
+            assertThrows(ValueConversionValidationException::class.java) {
+                mapper.updateEntity(entity, request)
+            }
+
+        assertEquals(
+            "Validation error: convertingMap contains duplicate keys after trimming",
+            exception.message,
+        )
+        assertEquals("Old Display Name", entity.displayName)
+        assertEquals(1L, entity.fromApplicationId)
+        assertEquals("oldFromType", entity.fromTypeId)
+        assertEquals("oldToAppId", entity.toApplicationId)
+        assertEquals("oldToType", entity.toTypeId)
+        assertEquals(mapOf("oldKey" to "oldValue"), entity.convertingMap)
+    }
+
+    @Test
     fun `mapping entity to response should exclude converting map when requested`() {
         val convertingMap =
             hashMapOf(

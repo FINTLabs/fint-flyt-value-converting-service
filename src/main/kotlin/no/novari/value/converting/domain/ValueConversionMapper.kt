@@ -10,28 +10,34 @@ import org.springframework.stereotype.Component
 @Component
 class ValueConversionMapper {
     fun toEntity(request: ValueConversionRequest): ValueConversion {
-        val trimmedEntries =
-            request.convertingMap
-                .entries
-                .map { (key, value) -> key.trim() to value.trim() }
-
-        val uniqueTrimmedKeys = trimmedEntries.map { (key, _) -> key }.toSet()
-        if (uniqueTrimmedKeys.size != trimmedEntries.size) {
-            throw ValueConversionValidationException(
-                "Validation error: convertingMap contains duplicate keys after trimming",
-            )
-        }
-
-        val trimmedMap = trimmedEntries.toMap(mutableMapOf())
-
         return ValueConversion(
             displayName = request.displayName,
             fromApplicationId = request.fromApplicationId,
             fromTypeId = request.fromTypeId,
             toApplicationId = request.toApplicationId,
             toTypeId = request.toTypeId,
-            convertingMap = trimmedMap,
+            convertingMap = trimConvertingMap(request),
         )
+    }
+
+    fun updateEntity(
+        valueConversion: ValueConversion,
+        request: ValueConversionRequest,
+    ): ValueConversion {
+        val trimmedConvertingMap = trimConvertingMap(request)
+
+        valueConversion.displayName = request.displayName
+        valueConversion.fromApplicationId = request.fromApplicationId
+        valueConversion.fromTypeId = request.fromTypeId
+        valueConversion.toApplicationId = request.toApplicationId
+        valueConversion.toTypeId = request.toTypeId
+        valueConversion.convertingMap
+            .keys
+            .filterNot(trimmedConvertingMap::containsKey)
+            .forEach(valueConversion.convertingMap::remove)
+        valueConversion.convertingMap.putAll(trimmedConvertingMap)
+
+        return valueConversion
     }
 
     fun toResponse(
@@ -87,5 +93,21 @@ class ValueConversionMapper {
         valueConversionId: Long?,
     ): T {
         return value ?: throw ValueConversionDataIntegrityException(valueConversionId, fieldName)
+    }
+
+    private fun trimConvertingMap(request: ValueConversionRequest): MutableMap<String, String> {
+        val trimmedEntries =
+            request.convertingMap
+                .entries
+                .map { (key, value) -> key.trim() to value.trim() }
+
+        val uniqueTrimmedKeys = trimmedEntries.map { (key, _) -> key }.toSet()
+        if (uniqueTrimmedKeys.size != trimmedEntries.size) {
+            throw ValueConversionValidationException(
+                "Validation error: convertingMap contains duplicate keys after trimming",
+            )
+        }
+
+        return trimmedEntries.toMap(mutableMapOf())
     }
 }

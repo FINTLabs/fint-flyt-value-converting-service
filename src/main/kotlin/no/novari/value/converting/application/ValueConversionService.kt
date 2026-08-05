@@ -50,6 +50,22 @@ class ValueConversionService(
     }
 
     @Transactional
+    fun update(
+        valueConversionId: Long,
+        request: ValueConversionRequest,
+    ): ValueConversionResponse {
+        val valueConversion =
+            valueConversionRepository
+                .findById(valueConversionId)
+                .orElseThrow { ValueConversionNotFoundException(valueConversionId) }
+
+        valueConversionMapper.updateEntity(valueConversion, request)
+        val saved = valueConversionRepository.save(valueConversion)
+
+        return toHydratedResponse(saved)
+    }
+
+    @Transactional
     fun delete(valueConversionId: Long) {
         val valueConversion =
             valueConversionRepository
