@@ -1,20 +1,25 @@
 package no.novari.value.converting.application
 
+import no.novari.flyt.audit.actor.ActorDisplayResolver
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
+import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionMapper
 import no.novari.value.converting.infrastructure.persistence.ValueConversionRepository
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
+import org.mockito.kotlin.anyOrNull
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
@@ -28,6 +33,9 @@ class ValueConversionServiceTest {
 
     @Mock
     private lateinit var valueConversionRepository: ValueConversionRepository
+
+    @Mock
+    private lateinit var actorDisplayResolver: ActorDisplayResolver
 
     @InjectMocks
     private lateinit var service: ValueConversionService
@@ -63,7 +71,10 @@ class ValueConversionServiceTest {
 
         whenever(valueConversionRepository.findAllByFromApplicationIdIn(pageable, sourceApplicationIds))
             .thenReturn(valueConversionPage)
-        whenever(valueConversionMapper.toResponse(valueConversion, includeConversionMap)).thenReturn(response)
+        whenever(actorDisplayResolver.resolveAll(any())).thenReturn(emptyMap())
+        whenever(
+            valueConversionMapper.toResponse(eq(valueConversion), eq(includeConversionMap), anyOrNull(), anyOrNull()),
+        ).thenReturn(response)
 
         val actualPage = service.findAllBySourceApplicationIds(pageable, includeConversionMap, sourceApplicationIds)
 
@@ -76,12 +87,13 @@ class ValueConversionServiceTest {
         val valueConversionId = 1L
         val expectedResponse = mock<ValueConversionResponse>()
         whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.of(mock<ValueConversion>()))
-        whenever(valueConversionMapper.toResponse(any(), any())).thenReturn(expectedResponse)
+        whenever(actorDisplayResolver.resolve(anyOrNull())).thenReturn(null)
+        whenever(valueConversionMapper.toResponse(any(), any(), anyOrNull(), anyOrNull())).thenReturn(expectedResponse)
 
         val result = service.findById(valueConversionId)
 
         verify(valueConversionRepository).findById(valueConversionId)
-        verify(valueConversionMapper).toResponse(any(), eq(true))
+        verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
         assertEquals(expectedResponse, result)
     }
 
@@ -105,13 +117,85 @@ class ValueConversionServiceTest {
 
         whenever(valueConversionMapper.toEntity(request)).thenReturn(entity)
         whenever(valueConversionRepository.save(any<ValueConversion>())).thenReturn(savedValueConversion)
-        whenever(valueConversionMapper.toResponse(any(), any())).thenReturn(expectedResponse)
+        whenever(actorDisplayResolver.resolve(anyOrNull())).thenReturn(null)
+        whenever(valueConversionMapper.toResponse(any(), any(), anyOrNull(), anyOrNull())).thenReturn(expectedResponse)
 
         val result = service.save(request)
 
         verify(valueConversionMapper).toEntity(request)
         verify(valueConversionRepository).save(any<ValueConversion>())
-        verify(valueConversionMapper).toResponse(any(), eq(true))
+        verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
         assertEquals(expectedResponse, result)
+    }
+
+    @Test
+    fun `updating existing value conversion should update entity and return saved response`() {
+        val valueConversionId = 1L
+        val request = mock<ValueConversionRequest>()
+        val existingValueConversion = mock<ValueConversion>()
+        val savedValueConversion = mock<ValueConversion>()
+        val expectedResponse = mock<ValueConversionResponse>()
+
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.of(existingValueConversion))
+        whenever(valueConversionRepository.save(existingValueConversion)).thenReturn(savedValueConversion)
+        whenever(actorDisplayResolver.resolve(anyOrNull())).thenReturn(null)
+        whenever(valueConversionMapper.toResponse(any(), any(), anyOrNull(), anyOrNull())).thenReturn(expectedResponse)
+
+        val result = service.update(valueConversionId, request)
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionMapper).updateEntity(existingValueConversion, request)
+        verify(valueConversionRepository).save(existingValueConversion)
+        verify(valueConversionMapper).toResponse(any(), eq(true), anyOrNull(), anyOrNull())
+        assertEquals(expectedResponse, result)
+    }
+
+    @Test
+    fun `updating non existing value conversion should throw not found`() {
+        val valueConversionId = 1L
+        val request = mock<ValueConversionRequest>()
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.empty())
+
+        assertThrows(ValueConversionNotFoundException::class.java) {
+            service.update(valueConversionId, request)
+        }
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionMapper, never()).updateEntity(any(), any())
+        verify(valueConversionRepository, never()).save(any<ValueConversion>())
+    }
+
+    @Test
+    fun `deleting existing value conversion should delete entity`() {
+        val valueConversionId = 1L
+        val valueConversion =
+            ValueConversion(
+                id = valueConversionId,
+                displayName = "displayName",
+                fromApplicationId = 2L,
+                fromTypeId = "fromTypeId",
+                toApplicationId = "toApplicationId",
+                toTypeId = "toTypeId",
+                convertingMap = hashMapOf("A" to "B"),
+            )
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.of(valueConversion))
+
+        service.delete(valueConversionId)
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionRepository).delete(valueConversion)
+    }
+
+    @Test
+    fun `deleting non existing value conversion should throw not found`() {
+        val valueConversionId = 1L
+        whenever(valueConversionRepository.findById(valueConversionId)).thenReturn(Optional.empty())
+
+        assertThrows(ValueConversionNotFoundException::class.java) {
+            service.delete(valueConversionId)
+        }
+
+        verify(valueConversionRepository).findById(valueConversionId)
+        verify(valueConversionRepository, never()).delete(any<ValueConversion>())
     }
 }

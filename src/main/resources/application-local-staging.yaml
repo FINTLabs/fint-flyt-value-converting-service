@@ -9,6 +9,10 @@ novari:
           internal:
             authorized-org-id-role-pairs-json: "{\"vigo.no\":[\"DEVELOPER\"]}"
 
+    audit:
+      authorization:
+        base-url: 'http://localhost:8084'
+
   kafka:
     default-replicas: 1
     topic:

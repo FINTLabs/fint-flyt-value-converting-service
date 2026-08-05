@@ -13,14 +13,18 @@ import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.application.ValueConversionService
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
+import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.validation.annotation.Validated
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
@@ -108,5 +112,41 @@ class ValueConversionController(
         )
 
         return valueConversionService.save(valueConversionRequest)
+    }
+
+    @PutMapping("{valueConversionId}")
+    fun putValueConversion(
+        authentication: Authentication,
+        @PathVariable valueConversionId: Long,
+        @Valid @RequestBody valueConversionRequest: ValueConversionRequest,
+    ): ValueConversionResponse {
+        val valueConversion =
+            valueConversionService.findById(valueConversionId)
+                ?: throw ValueConversionNotFoundException(valueConversionId)
+
+        userAuthorizationService.checkIfUserHasAccessToSourceApplication(
+            authentication,
+            valueConversion.fromApplicationId,
+        )
+
+        return valueConversionService.update(valueConversionId, valueConversionRequest)
+    }
+
+    @DeleteMapping("{valueConversionId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteValueConversion(
+        authentication: Authentication,
+        @PathVariable valueConversionId: Long,
+    ) {
+        val valueConversion =
+            valueConversionService.findById(valueConversionId)
+                ?: throw ValueConversionNotFoundException(valueConversionId)
+
+        userAuthorizationService.checkIfUserHasAccessToSourceApplication(
+            authentication,
+            valueConversion.fromApplicationId,
+        )
+
+        valueConversionService.delete(valueConversionId)
     }
 }
