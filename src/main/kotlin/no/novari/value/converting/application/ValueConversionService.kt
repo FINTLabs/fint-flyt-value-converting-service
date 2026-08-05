@@ -56,8 +56,6 @@ class ValueConversionService(
                 .findById(valueConversionId)
                 .orElseThrow { ValueConversionNotFoundException(valueConversionId) }
 
-        valueConversion.convertingMap.size
-
         valueConversionRepository.delete(valueConversion)
     }
 
