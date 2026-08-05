@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
@@ -159,6 +160,137 @@ class ValueConversionControllerWebMvcTest {
         mockMvc
             .perform(
                 post("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)),
+            ).andExpect(status().isUnprocessableEntity)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Unprocessable Entity"))
+            .andExpect(jsonPath("$.status").value(422))
+            .andExpect(
+                jsonPath("$.detail").value(
+                    "Validation error: convertingMap contains duplicate keys after trimming",
+                ),
+            )
+    }
+
+    @Test
+    fun `putting value conversion should return updated response`() {
+        val request =
+            ValueConversionRequest(
+                displayName = "Updated display name",
+                fromApplicationId = 2L,
+                fromTypeId = "updatedFromType",
+                toApplicationId = "updatedToAppId",
+                toTypeId = "updatedToType",
+                convertingMap = mapOf("C" to "D"),
+            )
+        val existingResponse = validResponse()
+        val updatedResponse =
+            ValueConversionResponse(
+                id = 1L,
+                displayName = "Updated display name",
+                fromApplicationId = 2L,
+                fromTypeId = "updatedFromType",
+                toApplicationId = "updatedToAppId",
+                toTypeId = "updatedToType",
+                convertingMap = mapOf("C" to "D"),
+            )
+        whenever(valueConversionService.findById(1L)).thenReturn(existingResponse)
+        whenever(valueConversionService.update(1L, request)).thenReturn(updatedResponse)
+
+        mockMvc
+            .perform(
+                put("/api/intern/value-convertings/1")
+                    .principal(authentication)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.displayName").value("Updated display name"))
+            .andExpect(jsonPath("$.fromApplicationId").value(2))
+            .andExpect(jsonPath("$.convertingMap.C").value("D"))
+
+        verify(userAuthorizationService).checkIfUserHasAccessToSourceApplication(authentication, 1L)
+        verify(valueConversionService).update(1L, request)
+    }
+
+    @Test
+    fun `putting value conversion with unknown id should return not found problem detail`() {
+        val request = validRequest()
+        whenever(valueConversionService.findById(123L)).thenReturn(null)
+
+        mockMvc
+            .perform(
+                put("/api/intern/value-convertings/123")
+                    .principal(authentication)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)),
+            ).andExpect(status().isNotFound)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Not Found"))
+            .andExpect(jsonPath("$.status").value(404))
+            .andExpect(jsonPath("$.detail").value("Value conversion with id=123 was not found"))
+
+        verify(valueConversionService, never()).update(any(), any())
+    }
+
+    @Test
+    fun `putting value conversion without source application access should return forbidden problem detail`() {
+        val request = validRequest()
+        whenever(valueConversionService.findById(1L)).thenReturn(validResponse())
+        doThrow(
+            ResponseStatusException(
+                HttpStatus.FORBIDDEN,
+                "You do not have permission to access or modify data that is related to source application with id=1",
+            ),
+        ).whenever(userAuthorizationService)
+            .checkIfUserHasAccessToSourceApplication(authentication, 1L)
+
+        mockMvc
+            .perform(
+                put("/api/intern/value-convertings/1")
+                    .principal(authentication)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(request)),
+            ).andExpect(status().isForbidden)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Forbidden"))
+            .andExpect(jsonPath("$.status").value(403))
+            .andExpect(
+                jsonPath("$.detail")
+                    .value(
+                        "You do not have permission to access or modify data that is related to source application " +
+                            "with id=1",
+                    ),
+            )
+
+        verify(valueConversionService, never()).update(any(), any())
+    }
+
+    @Test
+    fun `putting value conversion with duplicate trimmed keys should return unprocessable entity problem detail`() {
+        val request =
+            ValueConversionRequest(
+                displayName = "Display name",
+                fromApplicationId = 1L,
+                fromTypeId = "fromType",
+                toApplicationId = "toAppId",
+                toTypeId = "toType",
+                convertingMap = mapOf("A " to "B", " A" to "C"),
+            )
+        whenever(valueConversionService.findById(1L)).thenReturn(validResponse())
+        whenever(valueConversionService.update(1L, request))
+            .thenThrow(
+                ValueConversionValidationException(
+                    "Validation error: convertingMap contains duplicate keys after trimming",
+                ),
+            )
+
+        mockMvc
+            .perform(
+                put("/api/intern/value-convertings/1")
                     .principal(authentication)
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(objectMapper.writeValueAsString(request)),

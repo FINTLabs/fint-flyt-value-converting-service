@@ -234,4 +234,56 @@ class ValueConversionControllerTest {
 
         assertThat(response).isEqualTo(responseBody)
     }
+
+    @Test
+    @DisplayName("updates value conversion if found and user has access to existing source application")
+    fun `putting value conversion should update conversion when found and user has access`() {
+        val request = validRequest(fromApplicationId = 99L)
+        val existingResponse = validResponse(id = 1L, fromApplicationId = 2L)
+        val updatedResponse = validResponse(id = 1L, fromApplicationId = 99L)
+        whenever(valueConversionService.findById(1L)).thenReturn(existingResponse)
+        whenever(valueConversionService.update(1L, request)).thenReturn(updatedResponse)
+
+        val response = getController().putValueConversion(authentication, 1L, request)
+
+        verify(valueConversionService).findById(1L)
+        verify(userAuthorizationService).checkIfUserHasAccessToSourceApplication(authentication, 2L)
+        verify(valueConversionService).update(1L, request)
+        assertThat(response).isEqualTo(updatedResponse)
+    }
+
+    @Test
+    @DisplayName("throws not found when updating missing value conversion")
+    fun `putting value conversion should throw not found when conversion is missing`() {
+        val request = validRequest()
+        whenever(valueConversionService.findById(1L)).thenReturn(null)
+
+        assertThatThrownBy { getController().putValueConversion(authentication, 1L, request) }
+            .isInstanceOf(ValueConversionNotFoundException::class.java)
+
+        verify(valueConversionService).findById(1L)
+        verify(userAuthorizationService, never()).checkIfUserHasAccessToSourceApplication(any(), any())
+        verify(valueConversionService, never()).update(any(), any())
+    }
+
+    @Test
+    @DisplayName("throws forbidden when updating value conversion without access")
+    fun `putting value conversion should throw forbidden when user has no access`() {
+        val request = validRequest()
+        doThrow(ResponseStatusException(HttpStatus.FORBIDDEN, "Forbidden"))
+            .whenever(userAuthorizationService)
+            .checkIfUserHasAccessToSourceApplication(authentication, 1L)
+
+        whenever(valueConversionService.findById(1L))
+            .thenReturn(validResponse(fromApplicationId = 1L))
+
+        assertThatThrownBy { getController().putValueConversion(authentication, 1L, request) }
+            .isInstanceOf(ResponseStatusException::class.java)
+            .hasFieldOrPropertyWithValue("statusCode", HttpStatus.FORBIDDEN)
+            .hasMessageContaining("Forbidden")
+
+        verify(userAuthorizationService).checkIfUserHasAccessToSourceApplication(authentication, 1L)
+        verify(valueConversionService).findById(1L)
+        verify(valueConversionService, never()).update(any(), any())
+    }
 }

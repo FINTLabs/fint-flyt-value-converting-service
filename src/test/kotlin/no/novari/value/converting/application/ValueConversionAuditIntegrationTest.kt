@@ -1,5 +1,6 @@
 package no.novari.value.converting.application
 
+import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionMapper
 import no.novari.value.converting.infrastructure.persistence.ValueConversionRepository
@@ -39,10 +40,10 @@ import java.util.UUID
 @Import(
     ValueConversionService::class,
     ValueConversionMapper::class,
-    ValueConversionDeletionAuditIntegrationTest.AuditTestConfiguration::class,
+    ValueConversionAuditIntegrationTest.AuditTestConfiguration::class,
 )
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
-class ValueConversionDeletionAuditIntegrationTest {
+class ValueConversionAuditIntegrationTest {
     @Autowired
     private lateinit var valueConversionRepository: ValueConversionRepository
 
@@ -55,6 +56,113 @@ class ValueConversionDeletionAuditIntegrationTest {
     @AfterEach
     fun clearSecurityContext() {
         SecurityContextHolder.clearContext()
+    }
+
+    @Test
+    fun `updating value conversion should replace converting map and write update audit revisions`() {
+        val actorId = UUID.fromString("22222222-2222-2222-2222-222222222222")
+        setAuthenticatedUser(actorId)
+
+        val valueConversion =
+            valueConversionRepository.saveAndFlush(
+                ValueConversion(
+                    displayName = "Display name",
+                    fromApplicationId = 42L,
+                    fromTypeId = "fromType",
+                    toApplicationId = "toApp",
+                    toTypeId = "toType",
+                    convertingMap = mutableMapOf("A" to "B", "C" to "D"),
+                ),
+            )
+        val valueConversionId = checkNotNull(valueConversion.id)
+
+        val response =
+            valueConversionService.update(
+                valueConversionId,
+                ValueConversionRequest(
+                    displayName = "Updated display name",
+                    fromApplicationId = 43L,
+                    fromTypeId = "updatedFromType",
+                    toApplicationId = "updatedToApp",
+                    toTypeId = "updatedToType",
+                    convertingMap = mapOf(" A " to " Updated ", "E" to " F "),
+                ),
+            )
+
+        assertThat(response.id).isEqualTo(valueConversionId)
+        assertThat(response.convertingMap)
+            .containsExactlyInAnyOrderEntriesOf(mapOf("A" to "Updated", "E" to "F"))
+
+        val currentConvertingMapRows =
+            jdbcTemplate.queryForList(
+                """
+                select key, value
+                from converting_map
+                where value_converting_id = ?
+                order by key
+                """.trimIndent(),
+                valueConversionId,
+            )
+        assertThat(currentConvertingMapRows.associate { it["key"] as String to it["value"] as String })
+            .containsExactlyInAnyOrderEntriesOf(mapOf("A" to "Updated", "E" to "F"))
+
+        val valueConversionAuditRows =
+            jdbcTemplate.queryForList(
+                """
+                select rev, revtype, display_name, from_application_id
+                from value_converting_aud
+                where id = ?
+                order by rev
+                """.trimIndent(),
+                valueConversionId,
+            )
+
+        assertThat(valueConversionAuditRows.map { (it["revtype"] as Number).toInt() })
+            .containsExactly(0, 1)
+
+        val updateAuditRow = valueConversionAuditRows.last()
+        val updateRevision = (updateAuditRow["rev"] as Number).toLong()
+        assertThat(updateAuditRow["display_name"]).isEqualTo("Updated display name")
+        assertThat((updateAuditRow["from_application_id"] as Number).toLong()).isEqualTo(43L)
+
+        val convertingMapUpdateRows =
+            jdbcTemplate.queryForList(
+                """
+                select revtype, key, value
+                from converting_map_aud
+                where value_converting_id = ? and rev = ?
+                order by key
+                """.trimIndent(),
+                valueConversionId,
+                updateRevision,
+            )
+
+        val convertingMapUpdateRowsByKeyAndRevisionType =
+            convertingMapUpdateRows.associateBy {
+                it["key"] as String to (it["revtype"] as Number).toInt()
+            }
+        assertThat(convertingMapUpdateRowsByKeyAndRevisionType.keys)
+            .containsExactlyInAnyOrder(
+                "A" to 0,
+                "A" to 2,
+                "C" to 2,
+                "E" to 0,
+            )
+        assertThat(convertingMapUpdateRowsByKeyAndRevisionType.getValue("A" to 0)["value"]).isEqualTo("Updated")
+        assertThat(convertingMapUpdateRowsByKeyAndRevisionType.getValue("A" to 2)["value"]).isEqualTo("B")
+        assertThat(convertingMapUpdateRowsByKeyAndRevisionType.getValue("C" to 2)["value"]).isEqualTo("D")
+        assertThat(convertingMapUpdateRowsByKeyAndRevisionType.getValue("E" to 0)["value"]).isEqualTo("F")
+
+        val updateRevisionActor =
+            jdbcTemplate.queryForObject(
+                "select actor::text from revinfo where rev = ?",
+                String::class.java,
+                updateRevision,
+            )
+
+        assertThat(updateRevisionActor)
+            .contains("USER")
+            .contains(actorId.toString())
     }
 
     @Test
