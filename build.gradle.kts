@@ -39,7 +39,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    implementation("no.novari:flyt-web-resource-server:4.0.0-rc-2")
+    implementation("no.novari:flyt-web-resource-server:4.0.0-rc-3")
     implementation("no.novari:flyt-kafka:7.2.0")
     implementation("no.novari:flyt-audit-starter:1.1.0")
 
