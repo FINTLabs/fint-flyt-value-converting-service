@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.validation.BindException
 import org.springframework.web.bind.MissingServletRequestParameterException
 import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.RestControllerAdvice
@@ -67,6 +68,16 @@ class GlobalExceptionHandler {
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
             detail = "Validation error: '${exception.parameterName}' is required",
+        )
+    }
+
+    @ExceptionHandler(BindException::class)
+    fun handleBindException(exception: BindException): ProblemDetail {
+        logger.warn("Request parameter binding failed", exception)
+        return createProblemDetail(
+            status = HttpStatus.BAD_REQUEST,
+            title = "Bad Request",
+            detail = createBindingValidationDetail(exception),
         )
     }
 
@@ -150,6 +161,43 @@ class GlobalExceptionHandler {
 
         return if (!parameterName.isNullOrBlank() && !defaultMessage.isNullOrBlank()) {
             "Validation error: '$parameterName' $defaultMessage"
+        } else {
+            "Validation error: invalid request parameters"
+        }
+    }
+
+    private fun createBindingValidationDetail(exception: BindException): String {
+        val fieldError = exception.bindingResult.fieldErrors.firstOrNull()
+        if (fieldError != null) {
+            if (fieldError.isBindingFailure) {
+                return "Invalid value for request parameter '${fieldError.field}'"
+            }
+
+            val defaultMessage = fieldError.defaultMessage
+            return when {
+                fieldError.code == "NotNull" -> {
+                    "Validation error: '${fieldError.field}' is required"
+                }
+
+                fieldError.code == "AssertTrue" && !defaultMessage.isNullOrBlank() -> {
+                    "Validation error: $defaultMessage"
+                }
+
+                !defaultMessage.isNullOrBlank() -> {
+                    "Validation error: '${fieldError.field}' $defaultMessage"
+                }
+
+                else -> {
+                    "Validation error: invalid request parameters"
+                }
+            }
+        }
+
+        val objectError = exception.bindingResult.globalErrors.firstOrNull()
+        val defaultMessage = objectError?.defaultMessage
+
+        return if (!defaultMessage.isNullOrBlank()) {
+            "Validation error: $defaultMessage"
         } else {
             "Validation error: invalid request parameters"
         }
