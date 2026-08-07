@@ -1,6 +1,7 @@
 package no.novari.value.converting.api
 
 import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
+import no.novari.value.converting.api.dto.ValueConversionFilterParams
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.api.exception.ValueConversionNotFoundException
@@ -27,6 +28,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
 import java.time.Instant
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class ValueConversionControllerTest {
@@ -43,7 +45,7 @@ class ValueConversionControllerTest {
 
     @BeforeEach
     fun setUp() {
-        pageRequest = PageRequest.of(0, 10, Sort.Direction.ASC, "property")
+        pageRequest = PageRequest.of(0, 10, Sort.Direction.ASC, "id")
     }
 
     private fun getController(): ValueConversionController {
@@ -79,6 +81,14 @@ class ValueConversionControllerTest {
         )
     }
 
+    private fun validFilterParams(): ValueConversionFilterParams =
+        ValueConversionFilterParams().apply {
+            page = 0
+            size = 10
+            sortProperty = "id"
+            sortDirection = Sort.Direction.ASC
+        }
+
     @Test
     @DisplayName("returns value conversions filtered by source application IDs")
     fun `getting value conversions should filter by source application ids`() {
@@ -100,6 +110,7 @@ class ValueConversionControllerTest {
                 pageRequest,
                 false,
                 mockSourceApplicationIds,
+                ValueConversionFilter(),
             ),
         ).thenReturn(mockPage)
 
@@ -107,11 +118,10 @@ class ValueConversionControllerTest {
             getController()
                 .getValueConversions(
                     authentication = authentication,
-                    page = 0,
-                    size = 10,
-                    sortProperty = "property",
-                    sortDirection = Sort.Direction.ASC,
-                    excludeConversionMap = true,
+                    filterParams =
+                        validFilterParams().apply {
+                            excludeConvertingMap = true
+                        },
                 )
 
         verify(valueConversionService).findDistinctSourceApplicationIds()
@@ -122,7 +132,8 @@ class ValueConversionControllerTest {
         verify(valueConversionService).findAllBySourceApplicationIds(
             pageable = pageRequest,
             includeConversionMap = false,
-            sourceApplicationIds = mockSourceApplicationIds,
+            authorizedSourceApplicationIds = mockSourceApplicationIds,
+            filter = ValueConversionFilter(),
         )
 
         assertThat(response.content).isEqualTo(mockContent)
@@ -137,6 +148,8 @@ class ValueConversionControllerTest {
         val createdAtTo = Instant.parse("2026-01-31T23:59:59Z")
         val modifiedAtFrom = Instant.parse("2026-02-01T00:00:00Z")
         val modifiedAtTo = Instant.parse("2026-02-28T23:59:59Z")
+        val createdBy = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        val modifiedBy = UUID.fromString("22222222-2222-2222-2222-222222222222")
         val expectedFilter =
             ValueConversionFilter(
                 sourceApplicationIds = setOf(2L, 99L),
@@ -144,10 +157,10 @@ class ValueConversionControllerTest {
                 toApplicationId = "archive",
                 toTypeId = "code",
                 displayName = "county",
-                createdBy = "creator",
+                createdBy = createdBy,
                 createdAtFrom = createdAtFrom,
                 createdAtTo = createdAtTo,
-                modifiedBy = "modifier",
+                modifiedBy = modifiedBy,
                 modifiedAtFrom = modifiedAtFrom,
                 modifiedAtTo = modifiedAtTo,
             )
@@ -177,28 +190,30 @@ class ValueConversionControllerTest {
             getController()
                 .getValueConversions(
                     authentication = authentication,
-                    page = 1,
-                    size = 5,
-                    sortProperty = "modifiedAt",
-                    sortDirection = Sort.Direction.DESC,
-                    excludeConversionMap = false,
-                    requestedSourceApplicationIds = setOf(2L, 99L),
-                    fromTypeId = "text",
-                    toApplicationId = "archive",
-                    toTypeId = "code",
-                    displayName = "county",
-                    createdBy = "creator",
-                    createdAtFrom = createdAtFrom,
-                    createdAtTo = createdAtTo,
-                    modifiedBy = "modifier",
-                    modifiedAtFrom = modifiedAtFrom,
-                    modifiedAtTo = modifiedAtTo,
+                    filterParams =
+                        validFilterParams().apply {
+                            page = 1
+                            size = 5
+                            sortProperty = "modifiedAt"
+                            sortDirection = Sort.Direction.DESC
+                            sourceApplicationIds = setOf(2L, 99L)
+                            fromTypeId = " text "
+                            toApplicationId = "archive"
+                            toTypeId = "code"
+                            displayName = " county "
+                            this.createdBy = createdBy
+                            this.createdAtFrom = createdAtFrom
+                            this.createdAtTo = createdAtTo
+                            this.modifiedBy = modifiedBy
+                            this.modifiedAtFrom = modifiedAtFrom
+                            this.modifiedAtTo = modifiedAtTo
+                        },
                 )
 
         verify(valueConversionService).findAllBySourceApplicationIds(
             pageable = expectedPageRequest,
             includeConversionMap = true,
-            sourceApplicationIds = authorizedSourceApplicationIds,
+            authorizedSourceApplicationIds = authorizedSourceApplicationIds,
             filter = expectedFilter,
         )
 

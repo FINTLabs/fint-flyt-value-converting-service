@@ -5,9 +5,9 @@ import jakarta.persistence.criteria.Predicate
 import jakarta.persistence.criteria.Root
 import no.novari.value.converting.application.ValueConversionFilter
 import no.novari.value.converting.domain.ValueConversion
-import org.hibernate.query.criteria.JpaExpression
 import org.springframework.data.jpa.domain.Specification
 import java.time.Instant
+import java.util.UUID
 
 object ValueConversionSpecifications {
     fun matchingFilter(
@@ -15,47 +15,44 @@ object ValueConversionSpecifications {
         filter: ValueConversionFilter,
     ): Specification<ValueConversion> =
         Specification { root, _, criteriaBuilder ->
-            if (authorizedSourceApplicationIds.isEmpty()) {
+            val sourceApplicationIds = authorizedSourceApplicationIds.filteredBy(filter.sourceApplicationIds)
+
+            if (sourceApplicationIds.isEmpty()) {
                 criteriaBuilder.disjunction()
             } else {
-                val normalizedFilter = filter.normalized()
                 val predicates =
                     mutableListOf<Predicate>(
-                        root.get<Long>("fromApplicationId").`in`(authorizedSourceApplicationIds),
+                        root.get<Long>("fromApplicationId").`in`(sourceApplicationIds),
                     )
 
-                if (normalizedFilter.sourceApplicationIds.isNotEmpty()) {
-                    predicates += root.get<Long>("fromApplicationId").`in`(normalizedFilter.sourceApplicationIds)
-                }
-
-                normalizedFilter.fromTypeId?.let {
+                filter.fromTypeId?.let {
                     predicates += equalIgnoreCase(root, criteriaBuilder, "fromTypeId", it)
                 }
-                normalizedFilter.toApplicationId?.let {
+                filter.toApplicationId?.let {
                     predicates += equalIgnoreCase(root, criteriaBuilder, "toApplicationId", it)
                 }
-                normalizedFilter.toTypeId?.let {
+                filter.toTypeId?.let {
                     predicates += equalIgnoreCase(root, criteriaBuilder, "toTypeId", it)
                 }
-                normalizedFilter.displayName?.let {
+                filter.displayName?.let {
                     predicates += containsDisplayNameIgnoreCase(root, criteriaBuilder, it)
                 }
-                normalizedFilter.createdBy?.let {
-                    predicates += containsActor(root, criteriaBuilder, "createdBy", it)
+                filter.createdBy?.let {
+                    predicates += actorOidEquals(root, criteriaBuilder, "createdBy", it)
                 }
-                normalizedFilter.createdAtFrom?.let {
+                filter.createdAtFrom?.let {
                     predicates += greaterThanOrEqualToInstant(root, criteriaBuilder, "createdAt", it)
                 }
-                normalizedFilter.createdAtTo?.let {
+                filter.createdAtTo?.let {
                     predicates += lessThanOrEqualToInstant(root, criteriaBuilder, "createdAt", it)
                 }
-                normalizedFilter.modifiedBy?.let {
-                    predicates += containsActor(root, criteriaBuilder, "lastModifiedBy", it)
+                filter.modifiedBy?.let {
+                    predicates += actorOidEquals(root, criteriaBuilder, "lastModifiedBy", it)
                 }
-                normalizedFilter.modifiedAtFrom?.let {
+                filter.modifiedAtFrom?.let {
                     predicates += greaterThanOrEqualToInstant(root, criteriaBuilder, "lastModifiedAt", it)
                 }
-                normalizedFilter.modifiedAtTo?.let {
+                filter.modifiedAtTo?.let {
                     predicates += lessThanOrEqualToInstant(root, criteriaBuilder, "lastModifiedAt", it)
                 }
 
@@ -85,20 +82,21 @@ object ValueConversionSpecifications {
             '\\',
         )
 
-    private fun containsActor(
+    private fun actorOidEquals(
         root: Root<ValueConversion>,
         criteriaBuilder: CriteriaBuilder,
         property: String,
-        value: String,
-    ): Predicate {
-        val actorAsText = (root.get<Any>(property) as JpaExpression<*>).cast(String::class.java)
-
-        return criteriaBuilder.like(
-            criteriaBuilder.lower(actorAsText),
-            "%${escapeLike(value.lowercase())}%",
-            '\\',
+        oid: UUID,
+    ): Predicate =
+        criteriaBuilder.equal(
+            criteriaBuilder.function(
+                "jsonb_extract_path_text",
+                String::class.java,
+                root.get<Any>(property),
+                criteriaBuilder.literal("oid"),
+            ),
+            oid.toString(),
         )
-    }
 
     private fun greaterThanOrEqualToInstant(
         root: Root<ValueConversion>,
@@ -127,4 +125,11 @@ object ValueConversionSpecifications {
             .replace("\\", "\\\\")
             .replace("%", "\\%")
             .replace("_", "\\_")
+
+    private fun Set<Long>.filteredBy(requestedSourceApplicationIds: Set<Long>): Set<Long> =
+        if (requestedSourceApplicationIds.isEmpty()) {
+            this
+        } else {
+            intersect(requestedSourceApplicationIds)
+        }
 }

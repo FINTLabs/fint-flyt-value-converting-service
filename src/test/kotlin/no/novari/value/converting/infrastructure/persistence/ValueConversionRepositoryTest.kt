@@ -107,10 +107,10 @@ class ValueConversionRepositoryTest {
                 toApplicationId = "archive",
                 toTypeId = "code",
                 displayName = "text",
-                createdBy = creatorId.toString(),
+                createdBy = creatorId,
                 createdAtFrom = Instant.parse("2026-01-01T00:00:00Z"),
                 createdAtTo = Instant.parse("2026-01-31T23:59:59Z"),
-                modifiedBy = creatorId.toString(),
+                modifiedBy = creatorId,
                 modifiedAtFrom = Instant.parse("2026-02-01T00:00:00Z"),
                 modifiedAtTo = Instant.parse("2026-02-28T23:59:59Z"),
             )
@@ -120,6 +120,23 @@ class ValueConversionRepositoryTest {
                 ValueConversionSpecifications.matchingFilter(
                     authorizedSourceApplicationIds = setOf(2L, 3L),
                     filter = filter,
+                ),
+                PageRequest.of(0, 10, Sort.by("displayName")),
+            )
+
+        assertThat(page.content.map { it.id }).containsExactly(matchingId)
+    }
+
+    @Test
+    fun `find all should escape wildcard characters in display name filter`() {
+        val matchingId = saveConversion(displayName = "Completion 100% ready", fromApplicationId = 1L)
+        saveConversion(displayName = "Completion 1000 ready", fromApplicationId = 1L)
+
+        val page =
+            repository.findAll(
+                ValueConversionSpecifications.matchingFilter(
+                    authorizedSourceApplicationIds = setOf(1L),
+                    filter = ValueConversionFilter(displayName = "100%"),
                 ),
                 PageRequest.of(0, 10, Sort.by("displayName")),
             )

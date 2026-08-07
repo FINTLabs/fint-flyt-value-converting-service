@@ -1,6 +1,7 @@
 package no.novari.value.converting.application
 
 import java.time.Instant
+import java.util.UUID
 
 data class ValueConversionFilter(
     val sourceApplicationIds: Set<Long> = emptySet(),
@@ -8,10 +9,10 @@ data class ValueConversionFilter(
     val toApplicationId: String? = null,
     val toTypeId: String? = null,
     val displayName: String? = null,
-    val createdBy: String? = null,
+    val createdBy: UUID? = null,
     val createdAtFrom: Instant? = null,
     val createdAtTo: Instant? = null,
-    val modifiedBy: String? = null,
+    val modifiedBy: UUID? = null,
     val modifiedAtFrom: Instant? = null,
     val modifiedAtTo: Instant? = null,
 ) {
@@ -21,8 +22,6 @@ data class ValueConversionFilter(
             toApplicationId = toApplicationId.trimToNull(),
             toTypeId = toTypeId.trimToNull(),
             displayName = displayName.trimToNull(),
-            createdBy = createdBy.trimToNull(),
-            modifiedBy = modifiedBy.trimToNull(),
         )
 
     private fun String?.trimToNull(): String? = this?.trim()?.takeIf(String::isNotEmpty)

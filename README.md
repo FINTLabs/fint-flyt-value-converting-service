@@ -17,7 +17,7 @@ Spring Boot (Web + Data JPA) service that stores value-conversion maps between F
 | `ValueConversionController`                   | Handles `/api/intern/value-convertings` requests, enforces paging, validation, and optional authz filtering. |
 | `ValueConversionService`                      | Mediates repository access, maps entities ↔ DTOs, and applies `excludeConvertingMap` semantics.              |
 | `ValueConversionMapper`                       | Trims map keys/values and converts between `ValueConversion` JPA entities and API DTOs.                      |
-| `ValueConversionRepository`                   | Spring Data JPA repository, including `findAllByFromApplicationIdIn(...)` for user-scoped listings.          |
+| `ValueConversionRepository`                   | Spring Data JPA repository with specification-based filtering for user-scoped listings.                      |
 | `ValueConversionRequestConsumerConfiguration` | Creates the Kafka request listener/container, provisions the topic, and replies with repository lookups.     |
 | `GlobalExceptionHandler`                      | Maps application exceptions to HTTP `ProblemDetail` responses (`400`/`404`/`422`/`500`).                     |
 
@@ -32,7 +32,27 @@ Base path: `/api/intern/value-convertings`
 | `POST` | `/`                    | Create a new conversion; validation errors return `422 ProblemDetail`.                   | JSON `ValueConversionRequest` (map required) | `200 OK` with `ValueConversionResponse`       |
 
 Query parameters for `GET /`:
-`page` (0-based), `size`, `sortProperty`, `sortDirection` (`ASC|DESC`), and optional `excludeConvertingMap=true` to skip the map for list views.
+
+| Parameter              | Required | Description                                                                                                   |
+|------------------------|----------|---------------------------------------------------------------------------------------------------------------|
+| `page`                 | yes      | 0-based page number.                                                                                          |
+| `size`                 | yes      | Page size from 1 to 1000.                                                                                     |
+| `sortProperty`         | yes      | One of `id`, `displayName`, `fromApplicationId`, `sourceApplicationIds`, `fromTypeId`, `toApplicationId`, `toTypeId`, `createdAt`, `createdBy`, `modifiedAt`, `modifiedBy`. |
+| `sortDirection`        | yes      | `ASC` or `DESC`.                                                                                              |
+| `excludeConvertingMap` | no       | `true` skips the map payload for list views.                                                                  |
+| `sourceApplicationIds` | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
+| `fromTypeId`           | no       | Case-insensitive exact match.                                                                                 |
+| `toApplicationId`      | no       | Case-insensitive exact match.                                                                                 |
+| `toTypeId`             | no       | Case-insensitive exact match.                                                                                 |
+| `displayName`          | no       | Case-insensitive substring match. `%`, `_`, and `\` are treated as literal characters.                         |
+| `createdBy`            | no       | Exact actor OID/UUID match against the stored `created_by` audit JSON.                                        |
+| `createdAtFrom`        | no       | Inclusive lower bound for `createdAt`, as an ISO-8601 instant.                                                |
+| `createdAtTo`          | no       | Inclusive upper bound for `createdAt`, as an ISO-8601 instant.                                                |
+| `modifiedBy`           | no       | Exact actor OID/UUID match against the stored `last_modified_by` audit JSON.                                  |
+| `modifiedAtFrom`       | no       | Inclusive lower bound for `lastModifiedAt`, as an ISO-8601 instant.                                           |
+| `modifiedAtTo`         | no       | Inclusive upper bound for `lastModifiedAt`, as an ISO-8601 instant.                                           |
+
+Sorting by `createdBy` and `modifiedBy` uses the stored audit actor value, not the resolved display name returned in the response.
 
 `ValueConversionRequest` payload structure:
 

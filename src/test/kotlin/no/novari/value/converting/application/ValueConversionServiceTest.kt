@@ -46,6 +46,7 @@ class ValueConversionServiceTest {
         val pageable = PageRequest.of(0, 10)
         val includeConversionMap = false
         val sourceApplicationIds = setOf(1L, 2L)
+        val filter = ValueConversionFilter()
 
         val valueConversion =
             ValueConversion(
@@ -77,7 +78,13 @@ class ValueConversionServiceTest {
             valueConversionMapper.toResponse(eq(valueConversion), eq(includeConversionMap), anyOrNull(), anyOrNull()),
         ).thenReturn(response)
 
-        val actualPage = service.findAllBySourceApplicationIds(pageable, includeConversionMap, sourceApplicationIds)
+        val actualPage =
+            service.findAllBySourceApplicationIds(
+                pageable,
+                includeConversionMap,
+                sourceApplicationIds,
+                filter,
+            )
 
         assertEquals(1, actualPage.totalElements)
         assertEquals(response, actualPage.content[0])

@@ -24,12 +24,12 @@ class ValueConversionService(
     fun findAllBySourceApplicationIds(
         pageable: Pageable,
         includeConversionMap: Boolean,
-        sourceApplicationIds: Set<Long>,
-        filter: ValueConversionFilter = ValueConversionFilter(),
+        authorizedSourceApplicationIds: Set<Long>,
+        filter: ValueConversionFilter,
     ): Page<ValueConversionResponse> {
         val page =
             valueConversionRepository.findAll(
-                ValueConversionSpecifications.matchingFilter(sourceApplicationIds, filter),
+                ValueConversionSpecifications.matchingFilter(authorizedSourceApplicationIds, filter),
                 pageable,
             )
         val createdByDisplays = actorDisplayResolver.resolveAll(page.content.map { it.createdBy })
