@@ -5,6 +5,7 @@ import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.api.exception.ValueConversionValidationException
+import no.novari.value.converting.application.ValueConversionFilter
 import no.novari.value.converting.application.ValueConversionService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,6 +18,9 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
@@ -32,6 +36,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class ValueConversionControllerWebMvcTest {
@@ -383,6 +388,79 @@ class ValueConversionControllerWebMvcTest {
     }
 
     @Test
+    fun `getting value conversions with filters should return success response`() {
+        val candidateSourceApplicationIds = setOf(1L, 2L, 3L)
+        val authorizedSourceApplicationIds = setOf(2L, 3L)
+        val createdAtFrom = Instant.parse("2026-01-01T00:00:00Z")
+        val createdAtTo = Instant.parse("2026-01-31T23:59:59Z")
+        val modifiedAtFrom = Instant.parse("2026-02-01T00:00:00Z")
+        val modifiedAtTo = Instant.parse("2026-02-28T23:59:59Z")
+        val expectedPageRequest = PageRequest.of(0, 20, Sort.Direction.ASC, "lastModifiedBy")
+        val expectedFilter =
+            ValueConversionFilter(
+                sourceApplicationIds = setOf(2L, 99L),
+                fromTypeId = "text",
+                toApplicationId = "archive",
+                toTypeId = "code",
+                displayName = "Display",
+                createdBy = "creator",
+                createdAtFrom = createdAtFrom,
+                createdAtTo = createdAtTo,
+                modifiedBy = "modifier",
+                modifiedAtFrom = modifiedAtFrom,
+                modifiedAtTo = modifiedAtTo,
+            )
+
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(authorizedSourceApplicationIds)
+        whenever(
+            valueConversionService.findAllBySourceApplicationIds(
+                expectedPageRequest,
+                false,
+                authorizedSourceApplicationIds,
+                expectedFilter,
+            ),
+        ).thenReturn(PageImpl(listOf(validResponse())))
+
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "20")
+                    .queryParam("sortProperty", "modifiedBy")
+                    .queryParam("sortDirection", "ASC")
+                    .queryParam("excludeConvertingMap", "true")
+                    .queryParam("sourceApplicationIds", "2", "99")
+                    .queryParam("fromTypeId", "text")
+                    .queryParam("toApplicationId", "archive")
+                    .queryParam("toTypeId", "code")
+                    .queryParam("displayName", "Display")
+                    .queryParam("createdBy", "creator")
+                    .queryParam("createdAtFrom", createdAtFrom.toString())
+                    .queryParam("createdAtTo", createdAtTo.toString())
+                    .queryParam("modifiedBy", "modifier")
+                    .queryParam("modifiedAtFrom", modifiedAtFrom.toString())
+                    .queryParam("modifiedAtTo", modifiedAtTo.toString()),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].displayName").value("Display name"))
+
+        verify(valueConversionService).findAllBySourceApplicationIds(
+            expectedPageRequest,
+            false,
+            authorizedSourceApplicationIds,
+            expectedFilter,
+        )
+    }
+
+    @Test
     fun `getting value conversions with invalid size should return bad request problem detail`() {
         mockMvc
             .perform(
@@ -429,7 +507,7 @@ class ValueConversionControllerWebMvcTest {
                 candidateSourceApplicationIds,
             ),
         ).thenReturn(candidateSourceApplicationIds)
-        whenever(valueConversionService.findAllBySourceApplicationIds(any(), any(), any()))
+        whenever(valueConversionService.findAllBySourceApplicationIds(any(), any(), any(), any()))
             .thenThrow(
                 IllegalArgumentException(
                     "No property 'unknownField' found for type 'ValueConversion'",

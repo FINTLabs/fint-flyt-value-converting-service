@@ -7,6 +7,7 @@ import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.domain.ValueConversion
 import no.novari.value.converting.domain.ValueConversionMapper
 import no.novari.value.converting.infrastructure.persistence.ValueConversionRepository
+import no.novari.value.converting.infrastructure.persistence.ValueConversionSpecifications
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -24,8 +25,13 @@ class ValueConversionService(
         pageable: Pageable,
         includeConversionMap: Boolean,
         sourceApplicationIds: Set<Long>,
+        filter: ValueConversionFilter = ValueConversionFilter(),
     ): Page<ValueConversionResponse> {
-        val page = valueConversionRepository.findAllByFromApplicationIdIn(pageable, sourceApplicationIds)
+        val page =
+            valueConversionRepository.findAll(
+                ValueConversionSpecifications.matchingFilter(sourceApplicationIds, filter),
+                pageable,
+            )
         val createdByDisplays = actorDisplayResolver.resolveAll(page.content.map { it.createdBy })
         val lastModifiedByDisplays = actorDisplayResolver.resolveAll(page.content.map { it.lastModifiedBy })
 

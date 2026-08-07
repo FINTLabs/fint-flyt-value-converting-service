@@ -4,6 +4,7 @@ import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.api.exception.ValueConversionNotFoundException
+import no.novari.value.converting.application.ValueConversionFilter
 import no.novari.value.converting.application.ValueConversionService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -25,6 +26,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.Authentication
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
 
 @ExtendWith(MockitoExtension::class)
 class ValueConversionControllerTest {
@@ -121,6 +123,83 @@ class ValueConversionControllerTest {
             pageable = pageRequest,
             includeConversionMap = false,
             sourceApplicationIds = mockSourceApplicationIds,
+        )
+
+        assertThat(response.content).isEqualTo(mockContent)
+    }
+
+    @Test
+    @DisplayName("passes optional filter parameters to service")
+    fun `getting value conversions should pass optional filter parameters to service`() {
+        val candidateSourceApplicationIds = setOf(1L, 2L, 3L)
+        val authorizedSourceApplicationIds = setOf(1L, 2L)
+        val createdAtFrom = Instant.parse("2026-01-01T00:00:00Z")
+        val createdAtTo = Instant.parse("2026-01-31T23:59:59Z")
+        val modifiedAtFrom = Instant.parse("2026-02-01T00:00:00Z")
+        val modifiedAtTo = Instant.parse("2026-02-28T23:59:59Z")
+        val expectedFilter =
+            ValueConversionFilter(
+                sourceApplicationIds = setOf(2L, 99L),
+                fromTypeId = "text",
+                toApplicationId = "archive",
+                toTypeId = "code",
+                displayName = "county",
+                createdBy = "creator",
+                createdAtFrom = createdAtFrom,
+                createdAtTo = createdAtTo,
+                modifiedBy = "modifier",
+                modifiedAtFrom = modifiedAtFrom,
+                modifiedAtTo = modifiedAtTo,
+            )
+        val expectedPageRequest = PageRequest.of(1, 5, Sort.Direction.DESC, "lastModifiedAt")
+
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(authorizedSourceApplicationIds)
+
+        val mockContent = listOf(mock<ValueConversionResponse>())
+        val mockPage = mock<Page<ValueConversionResponse>>()
+        whenever(mockPage.content).thenReturn(mockContent)
+        whenever(
+            valueConversionService.findAllBySourceApplicationIds(
+                expectedPageRequest,
+                true,
+                authorizedSourceApplicationIds,
+                expectedFilter,
+            ),
+        ).thenReturn(mockPage)
+
+        val response =
+            getController()
+                .getValueConversions(
+                    authentication = authentication,
+                    page = 1,
+                    size = 5,
+                    sortProperty = "modifiedAt",
+                    sortDirection = Sort.Direction.DESC,
+                    excludeConversionMap = false,
+                    requestedSourceApplicationIds = setOf(2L, 99L),
+                    fromTypeId = "text",
+                    toApplicationId = "archive",
+                    toTypeId = "code",
+                    displayName = "county",
+                    createdBy = "creator",
+                    createdAtFrom = createdAtFrom,
+                    createdAtTo = createdAtTo,
+                    modifiedBy = "modifier",
+                    modifiedAtFrom = modifiedAtFrom,
+                    modifiedAtTo = modifiedAtTo,
+                )
+
+        verify(valueConversionService).findAllBySourceApplicationIds(
+            pageable = expectedPageRequest,
+            includeConversionMap = true,
+            sourceApplicationIds = authorizedSourceApplicationIds,
+            filter = expectedFilter,
         )
 
         assertThat(response.content).isEqualTo(mockContent)

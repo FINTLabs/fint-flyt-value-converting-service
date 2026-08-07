@@ -10,6 +10,7 @@ import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.api.exception.InvalidRequestParameterException
 import no.novari.value.converting.api.exception.ValueConversionNotFoundException
+import no.novari.value.converting.application.ValueConversionFilter
 import no.novari.value.converting.application.ValueConversionService
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import java.time.Instant
 
 @RestController
 @Validated
@@ -43,6 +45,20 @@ class ValueConversionController(
         @RequestParam sortDirection: Sort.Direction,
         @RequestParam(name = "excludeConvertingMap", required = false, defaultValue = "false") excludeConversionMap:
             Boolean,
+        @RequestParam(name = "sourceApplicationIds", required = false) requestedSourceApplicationIds: Set<Long>? = null,
+        @RequestParam(required = false) fromTypeId: String? = null,
+        @RequestParam(required = false) toApplicationId: String? = null,
+        @RequestParam(required = false) toTypeId: String? = null,
+        @RequestParam(required = false) displayName: String? = null,
+        @RequestParam(required = false) createdBy: String? = null,
+        @RequestParam(required = false) createdAtFrom: Instant? = null,
+        @RequestParam(required = false) createdAtTo: Instant? = null,
+        @RequestParam(required = false) modifiedBy: String? = null,
+        @RequestParam(required = false) lastModifiedBy: String? = null,
+        @RequestParam(required = false) modifiedAtFrom: Instant? = null,
+        @RequestParam(required = false) modifiedAtTo: Instant? = null,
+        @RequestParam(required = false) lastModifiedAtFrom: Instant? = null,
+        @RequestParam(required = false) lastModifiedAtTo: Instant? = null,
     ): ValueConversionPageResponse {
         validatePage(page)
         validateSize(size)
@@ -50,7 +66,7 @@ class ValueConversionController(
         val pageRequest =
             PageRequest
                 .of(page, size)
-                .withSort(sortDirection, sortProperty)
+                .withSort(sortDirection, sortProperty.toEntitySortProperty())
 
         val sourceApplicationIds =
             userAuthorizationService
@@ -64,10 +80,31 @@ class ValueConversionController(
                 pageable = pageRequest,
                 includeConversionMap = !excludeConversionMap,
                 sourceApplicationIds = sourceApplicationIds,
+                filter =
+                    ValueConversionFilter(
+                        sourceApplicationIds = requestedSourceApplicationIds.orEmpty(),
+                        fromTypeId = fromTypeId,
+                        toApplicationId = toApplicationId,
+                        toTypeId = toTypeId,
+                        displayName = displayName,
+                        createdBy = createdBy,
+                        createdAtFrom = createdAtFrom,
+                        createdAtTo = createdAtTo,
+                        modifiedBy = modifiedBy ?: lastModifiedBy,
+                        modifiedAtFrom = modifiedAtFrom ?: lastModifiedAtFrom,
+                        modifiedAtTo = modifiedAtTo ?: lastModifiedAtTo,
+                    ),
             )
 
         return ValueConversionPageResponse(content = valueConversions.content)
     }
+
+    private fun String.toEntitySortProperty(): String =
+        when (this) {
+            "modifiedBy" -> "lastModifiedBy"
+            "modifiedAt" -> "lastModifiedAt"
+            else -> this
+        }
 
     private fun validateSize(size: Int) {
         if (size < 1) {
