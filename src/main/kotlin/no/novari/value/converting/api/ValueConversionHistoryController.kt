@@ -37,6 +37,10 @@ class ValueConversionHistoryController(
     public override fun additionalFilter(authentication: Authentication): AuditPropertyFilter =
         AuditPropertyFilter(
             property = "fromApplicationId",
-            allowedValues = userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication),
+            allowedValues =
+                userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                    authentication,
+                    valueConversionRepository.findDistinctSourceApplicationIds(),
+                ),
         )
 }

@@ -77,8 +77,15 @@ class ValueConversionHistoryControllerTest {
     @Test
     fun `additionalFilter should scope by users authorized source application ids`() {
         val sourceApplicationIds = setOf(1L, 2L)
-        whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(authentication))
-            .thenReturn(sourceApplicationIds)
+        val existingSourceApplicationIds = setOf(1L, 2L, 3L)
+        whenever(valueConversionRepository.findDistinctSourceApplicationIds())
+            .thenReturn(existingSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                existingSourceApplicationIds,
+            ),
+        ).thenReturn(sourceApplicationIds)
 
         val filter = getController().additionalFilter(authentication)
 

@@ -75,7 +75,7 @@ class ValueConversionHistoryRoutingWebMvcTest {
 
     @Test
     fun `GET history routes to allHistory and not to getValueConversion`() {
-        whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(any())).thenReturn(setOf(1L))
+        whenever(userAuthorizationService.getUserAuthorizedSourceApplicationIds(any(), any())).thenReturn(setOf(1L))
         whenever(valueConversionHistoryService.findAllHistory(any(), any(), any()))
             .thenReturn(PageImpl(emptyList<EntityHistoryEntryDto<ValueConversionSnapshot, Long>>()))
 

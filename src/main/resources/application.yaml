@@ -10,9 +10,9 @@ spring:
     include:
       - flyt-kafka
       - flyt-web-resource-server
+      - flyt-authorization-client
       - flyt-postgres
       - flyt-logging
-      - flyt-authorization-client
 
   output:
     ansi:

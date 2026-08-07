@@ -18,6 +18,8 @@ class ValueConversionService(
     private val valueConversionRepository: ValueConversionRepository,
     private val actorDisplayResolver: ActorDisplayResolver,
 ) {
+    fun findDistinctSourceApplicationIds(): Set<Long> = valueConversionRepository.findDistinctSourceApplicationIds()
+
     fun findAllBySourceApplicationIds(
         pageable: Pageable,
         includeConversionMap: Boolean,

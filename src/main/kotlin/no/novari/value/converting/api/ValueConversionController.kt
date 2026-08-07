@@ -54,7 +54,10 @@ class ValueConversionController(
 
         val sourceApplicationIds =
             userAuthorizationService
-                .getUserAuthorizedSourceApplicationIds(authentication)
+                .getUserAuthorizedSourceApplicationIds(
+                    authentication,
+                    valueConversionService.findDistinctSourceApplicationIds(),
+                )
 
         val valueConversions =
             valueConversionService.findAllBySourceApplicationIds(
