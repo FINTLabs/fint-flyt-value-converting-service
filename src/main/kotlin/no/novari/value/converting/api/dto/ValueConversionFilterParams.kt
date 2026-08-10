@@ -86,7 +86,7 @@ class ValueConversionFilterParams {
     private fun String.toEntitySortProperty(): String =
         SORT_PROPERTIES[this]
             ?: throw InvalidRequestParameterException(
-                "Validation error: 'sortProperty' must be one of ${SORT_PROPERTIES.keys.sorted().joinToString()}",
+                "Validation error: 'sortProperty' must be one of ${SUPPORTED_SORT_PROPERTIES.joinToString()}",
             )
 
     private fun String?.trimToNull(): String? = this?.trim()?.takeIf(String::isNotEmpty)
@@ -99,10 +99,18 @@ class ValueConversionFilterParams {
     companion object {
         private val SORT_PROPERTIES =
             mapOf(
+                "createdBy" to "id",
                 "displayName" to "displayName",
+                "fromApplicationId" to "fromApplicationId",
+                "fromTypeId" to "fromTypeId",
                 "createdAt" to "createdAt",
                 "id" to "id",
                 "modifiedAt" to "lastModifiedAt",
+                "modifiedBy" to "id",
+                "sourceApplicationIds" to "fromApplicationId",
+                "toApplicationId" to "toApplicationId",
+                "toTypeId" to "toTypeId",
             )
+        private val SUPPORTED_SORT_PROPERTIES = SORT_PROPERTIES.keys.sorted()
     }
 }
