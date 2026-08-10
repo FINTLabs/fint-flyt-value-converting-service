@@ -54,9 +54,16 @@ class ValueConversionFilterParams {
             .of(
                 checkNotNull(page),
                 checkNotNull(size),
-            ).withSort(
-                checkNotNull(sortDirection),
-                checkNotNull(sortProperty).toEntitySortProperty(),
+                Sort.by(
+                    Sort.Order(
+                        checkNotNull(sortDirection),
+                        checkNotNull(sortProperty).toEntitySortProperty(),
+                    ),
+                    Sort.Order(
+                        checkNotNull(sortDirection),
+                        "id",
+                    ),
+                ),
             )
 
     fun toFilter(): ValueConversionFilter =
@@ -88,17 +95,9 @@ class ValueConversionFilterParams {
     companion object {
         private val SORT_PROPERTIES =
             mapOf(
-                "id" to "id",
                 "displayName" to "displayName",
-                "sourceApplicationIds" to "fromApplicationId",
-                "fromApplicationId" to "fromApplicationId",
-                "fromTypeId" to "fromTypeId",
-                "toApplicationId" to "toApplicationId",
-                "toTypeId" to "toTypeId",
                 "createdAt" to "createdAt",
-                "createdBy" to "createdBy",
                 "modifiedAt" to "lastModifiedAt",
-                "modifiedBy" to "lastModifiedBy",
             )
     }
 }

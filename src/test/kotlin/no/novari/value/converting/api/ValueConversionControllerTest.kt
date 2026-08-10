@@ -45,7 +45,15 @@ class ValueConversionControllerTest {
 
     @BeforeEach
     fun setUp() {
-        pageRequest = PageRequest.of(0, 10, Sort.Direction.ASC, "id")
+        pageRequest =
+            PageRequest.of(
+                0,
+                10,
+                Sort.by(
+                    Sort.Order.asc("displayName"),
+                    Sort.Order.asc("id"),
+                ),
+            )
     }
 
     private fun getController(): ValueConversionController {
@@ -85,7 +93,7 @@ class ValueConversionControllerTest {
         ValueConversionFilterParams().apply {
             page = 0
             size = 10
-            sortProperty = "id"
+            sortProperty = "displayName"
             sortDirection = Sort.Direction.ASC
         }
 
@@ -164,7 +172,15 @@ class ValueConversionControllerTest {
                 modifiedAtFrom = modifiedAtFrom,
                 modifiedAtTo = modifiedAtTo,
             )
-        val expectedPageRequest = PageRequest.of(1, 5, Sort.Direction.DESC, "lastModifiedAt")
+        val expectedPageRequest =
+            PageRequest.of(
+                1,
+                5,
+                Sort.by(
+                    Sort.Order.desc("lastModifiedAt"),
+                    Sort.Order.desc("id"),
+                ),
+            )
 
         whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
         whenever(

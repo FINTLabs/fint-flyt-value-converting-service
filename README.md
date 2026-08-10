@@ -37,7 +37,7 @@ Query parameters for `GET /`:
 |------------------------|----------|---------------------------------------------------------------------------------------------------------------|
 | `page`                 | yes      | 0-based page number.                                                                                          |
 | `size`                 | yes      | Page size from 1 to 1000.                                                                                     |
-| `sortProperty`         | yes      | One of `id`, `displayName`, `fromApplicationId`, `sourceApplicationIds`, `fromTypeId`, `toApplicationId`, `toTypeId`, `createdAt`, `createdBy`, `modifiedAt`, `modifiedBy`. |
+| `sortProperty`         | yes      | One of `displayName`, `createdAt`, `modifiedAt`. Results are secondarily sorted by `id` for stable pagination. |
 | `sortDirection`        | yes      | `ASC` or `DESC`.                                                                                              |
 | `excludeConvertingMap` | no       | `true` skips the map payload for list views.                                                                  |
 | `sourceApplicationIds` | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
@@ -51,8 +51,6 @@ Query parameters for `GET /`:
 | `modifiedBy`           | no       | Exact actor OID/UUID match against the stored `last_modified_by` audit JSON.                                  |
 | `modifiedAtFrom`       | no       | Inclusive lower bound for `lastModifiedAt`, as an ISO-8601 instant.                                           |
 | `modifiedAtTo`         | no       | Inclusive upper bound for `lastModifiedAt`, as an ISO-8601 instant.                                           |
-
-Sorting by `createdBy` and `modifiedBy` uses the stored audit actor value, not the resolved display name returned in the response.
 
 `ValueConversionRequest` payload structure:
 
@@ -143,7 +141,7 @@ Verify the API:
 
 ```shell
 curl -H "Authorization: Bearer <token>" \
-"http://localhost:8094/api/intern/value-convertings?page=0&size=20&sortProperty=id&sortDirection=ASC"
+"http://localhost:8094/api/intern/value-convertings?page=0&size=20&sortProperty=displayName&sortDirection=ASC"
 ```
 
 Local profile defaults:

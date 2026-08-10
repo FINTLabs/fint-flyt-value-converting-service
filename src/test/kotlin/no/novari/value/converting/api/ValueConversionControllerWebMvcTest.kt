@@ -398,7 +398,15 @@ class ValueConversionControllerWebMvcTest {
         val modifiedAtTo = Instant.parse("2026-02-28T23:59:59Z")
         val createdBy = UUID.fromString("11111111-1111-1111-1111-111111111111")
         val modifiedBy = UUID.fromString("22222222-2222-2222-2222-222222222222")
-        val expectedPageRequest = PageRequest.of(0, 20, Sort.Direction.ASC, "lastModifiedBy")
+        val expectedPageRequest =
+            PageRequest.of(
+                0,
+                20,
+                Sort.by(
+                    Sort.Order.asc("lastModifiedAt"),
+                    Sort.Order.asc("id"),
+                ),
+            )
         val expectedFilter =
             ValueConversionFilter(
                 sourceApplicationIds = setOf(2L, 99L),
@@ -436,7 +444,7 @@ class ValueConversionControllerWebMvcTest {
                     .principal(authentication)
                     .queryParam("page", "0")
                     .queryParam("size", "20")
-                    .queryParam("sortProperty", "modifiedBy")
+                    .queryParam("sortProperty", "modifiedAt")
                     .queryParam("sortDirection", "ASC")
                     .queryParam("excludeConvertingMap", "true")
                     .queryParam("sourceApplicationIds", "2", "99")
@@ -516,9 +524,7 @@ class ValueConversionControllerWebMvcTest {
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(
                 jsonPath("$.detail").value(
-                    "Validation error: 'sortProperty' must be one of createdAt, createdBy, displayName, " +
-                        "fromApplicationId, fromTypeId, id, modifiedAt, modifiedBy, sourceApplicationIds, " +
-                        "toApplicationId, toTypeId",
+                    "Validation error: 'sortProperty' must be one of createdAt, displayName, modifiedAt",
                 ),
             )
 
