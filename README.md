@@ -37,8 +37,8 @@ Query parameters for `GET /`:
 |------------------------|----------|---------------------------------------------------------------------------------------------------------------|
 | `page`                 | yes      | 0-based page number.                                                                                          |
 | `size`                 | yes      | Page size from 1 to 1000.                                                                                     |
-| `sortProperty`         | yes      | One of `displayName`, `createdAt`, `modifiedAt`. Results are secondarily sorted by `id` for stable pagination. |
-| `sortDirection`        | yes      | `ASC` or `DESC`.                                                                                              |
+| `sortProperty`         | no       | One of `displayName`, `createdAt`, `modifiedAt`, `id`. Defaults to `id` when omitted. Non-`id` sorts are secondarily sorted by `id` for stable pagination. |
+| `sortDirection`        | no       | `ASC` or `DESC`. Defaults to `ASC` when omitted.                                                              |
 | `excludeConvertingMap` | no       | `true` skips the map payload for list views.                                                                  |
 | `sourceApplicationIds` | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
 | `fromTypeId`           | no       | Case-insensitive exact match.                                                                                 |

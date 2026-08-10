@@ -472,6 +472,46 @@ class ValueConversionControllerWebMvcTest {
     }
 
     @Test
+    fun `getting value conversions without sort parameters should use stable id sort`() {
+        val candidateSourceApplicationIds = setOf(1L)
+        val authorizedSourceApplicationIds = setOf(1L)
+        val expectedPageRequest = PageRequest.of(0, 20, Sort.by(Sort.Order.asc("id")))
+
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(authorizedSourceApplicationIds)
+        whenever(
+            valueConversionService.findAllBySourceApplicationIds(
+                expectedPageRequest,
+                true,
+                authorizedSourceApplicationIds,
+                ValueConversionFilter(),
+            ),
+        ).thenReturn(PageImpl(listOf(validResponse())))
+
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "20"),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.content[0].id").value(1))
+
+        verify(valueConversionService).findAllBySourceApplicationIds(
+            expectedPageRequest,
+            true,
+            authorizedSourceApplicationIds,
+            ValueConversionFilter(),
+        )
+    }
+
+    @Test
     fun `getting value conversions with invalid size should return bad request problem detail`() {
         mockMvc
             .perform(
@@ -524,7 +564,7 @@ class ValueConversionControllerWebMvcTest {
             .andExpect(jsonPath("$.status").value(400))
             .andExpect(
                 jsonPath("$.detail").value(
-                    "Validation error: 'sortProperty' must be one of createdAt, displayName, modifiedAt",
+                    "Validation error: 'sortProperty' must be one of createdAt, displayName, id, modifiedAt",
                 ),
             )
 

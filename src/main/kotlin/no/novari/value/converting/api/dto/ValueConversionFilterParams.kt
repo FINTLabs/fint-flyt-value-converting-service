@@ -3,7 +3,6 @@ package no.novari.value.converting.api.dto
 import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
-import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import no.novari.value.converting.api.exception.InvalidRequestParameterException
 import no.novari.value.converting.application.ValueConversionFilter
@@ -22,10 +21,8 @@ class ValueConversionFilterParams {
     @field:Max(1000)
     var size: Int? = null
 
-    @field:NotBlank
     var sortProperty: String? = null
 
-    @field:NotNull
     var sortDirection: Sort.Direction? = null
 
     var excludeConvertingMap: Boolean = false
@@ -54,16 +51,7 @@ class ValueConversionFilterParams {
             .of(
                 checkNotNull(page),
                 checkNotNull(size),
-                Sort.by(
-                    Sort.Order(
-                        checkNotNull(sortDirection),
-                        checkNotNull(sortProperty).toEntitySortProperty(),
-                    ),
-                    Sort.Order(
-                        checkNotNull(sortDirection),
-                        "id",
-                    ),
-                ),
+                toSort(),
             )
 
     fun toFilter(): ValueConversionFilter =
@@ -81,11 +69,27 @@ class ValueConversionFilterParams {
             modifiedAtTo = modifiedAtTo,
         ).normalized()
 
+    private fun toSort(): Sort {
+        val direction = sortDirection ?: Sort.Direction.ASC
+        val entitySortProperty = sortProperty.trimToNull()?.toEntitySortProperty() ?: "id"
+        val orders =
+            buildList {
+                add(Sort.Order(direction, entitySortProperty))
+                if (entitySortProperty != "id") {
+                    add(Sort.Order(direction, "id"))
+                }
+            }
+
+        return Sort.by(orders)
+    }
+
     private fun String.toEntitySortProperty(): String =
         SORT_PROPERTIES[this]
             ?: throw InvalidRequestParameterException(
                 "Validation error: 'sortProperty' must be one of ${SORT_PROPERTIES.keys.sorted().joinToString()}",
             )
+
+    private fun String?.trimToNull(): String? = this?.trim()?.takeIf(String::isNotEmpty)
 
     private fun isValidRange(
         from: Instant?,
@@ -97,6 +101,7 @@ class ValueConversionFilterParams {
             mapOf(
                 "displayName" to "displayName",
                 "createdAt" to "createdAt",
+                "id" to "id",
                 "modifiedAt" to "lastModifiedAt",
             )
     }
