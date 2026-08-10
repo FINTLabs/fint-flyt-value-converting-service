@@ -24,6 +24,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.jpa.domain.Specification
 import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
@@ -45,6 +46,7 @@ class ValueConversionServiceTest {
         val pageable = PageRequest.of(0, 10)
         val includeConversionMap = false
         val sourceApplicationIds = setOf(1L, 2L)
+        val filter = ValueConversionFilter()
 
         val valueConversion =
             ValueConversion(
@@ -69,14 +71,20 @@ class ValueConversionServiceTest {
                 convertingMap = null,
             )
 
-        whenever(valueConversionRepository.findAllByFromApplicationIdIn(pageable, sourceApplicationIds))
+        whenever(valueConversionRepository.findAll(any<Specification<ValueConversion>>(), eq(pageable)))
             .thenReturn(valueConversionPage)
         whenever(actorDisplayResolver.resolveAll(any())).thenReturn(emptyMap())
         whenever(
             valueConversionMapper.toResponse(eq(valueConversion), eq(includeConversionMap), anyOrNull(), anyOrNull()),
         ).thenReturn(response)
 
-        val actualPage = service.findAllBySourceApplicationIds(pageable, includeConversionMap, sourceApplicationIds)
+        val actualPage =
+            service.findAllBySourceApplicationIds(
+                pageable,
+                includeConversionMap,
+                sourceApplicationIds,
+                filter,
+            )
 
         assertEquals(1, actualPage.totalElements)
         assertEquals(response, actualPage.content[0])

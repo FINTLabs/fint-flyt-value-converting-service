@@ -5,6 +5,7 @@ import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
 import no.novari.value.converting.api.dto.ValueConversionRequest
 import no.novari.value.converting.api.dto.ValueConversionResponse
 import no.novari.value.converting.api.exception.ValueConversionValidationException
+import no.novari.value.converting.application.ValueConversionFilter
 import no.novari.value.converting.application.ValueConversionService
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,6 +18,9 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
@@ -32,6 +36,8 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean
 import org.springframework.web.server.ResponseStatusException
+import java.time.Instant
+import java.util.UUID
 
 @ExtendWith(MockitoExtension::class)
 class ValueConversionControllerWebMvcTest {
@@ -383,6 +389,129 @@ class ValueConversionControllerWebMvcTest {
     }
 
     @Test
+    fun `getting value conversions with filters should return success response`() {
+        val candidateSourceApplicationIds = setOf(1L, 2L, 3L)
+        val authorizedSourceApplicationIds = setOf(2L, 3L)
+        val createdAtFrom = Instant.parse("2026-01-01T00:00:00Z")
+        val createdAtTo = Instant.parse("2026-01-31T23:59:59Z")
+        val modifiedAtFrom = Instant.parse("2026-02-01T00:00:00Z")
+        val modifiedAtTo = Instant.parse("2026-02-28T23:59:59Z")
+        val createdBy = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        val modifiedBy = UUID.fromString("22222222-2222-2222-2222-222222222222")
+        val expectedPageRequest =
+            PageRequest.of(
+                0,
+                20,
+                Sort.by(
+                    Sort.Order.asc("lastModifiedAt"),
+                    Sort.Order.asc("id"),
+                ),
+            )
+        val expectedFilter =
+            ValueConversionFilter(
+                sourceApplicationIds = setOf(2L, 99L),
+                fromTypeId = "text",
+                toApplicationId = "archive",
+                toTypeId = "code",
+                displayName = "Display",
+                createdBy = createdBy,
+                createdAtFrom = createdAtFrom,
+                createdAtTo = createdAtTo,
+                modifiedBy = modifiedBy,
+                modifiedAtFrom = modifiedAtFrom,
+                modifiedAtTo = modifiedAtTo,
+            )
+
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(authorizedSourceApplicationIds)
+        whenever(
+            valueConversionService.findAllBySourceApplicationIds(
+                expectedPageRequest,
+                false,
+                authorizedSourceApplicationIds,
+                expectedFilter,
+            ),
+        ).thenReturn(PageImpl(listOf(validResponse())))
+
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "20")
+                    .queryParam("sortProperty", "modifiedAt")
+                    .queryParam("sortDirection", "ASC")
+                    .queryParam("excludeConvertingMap", "true")
+                    .queryParam("sourceApplicationIds", "2", "99")
+                    .queryParam("fromTypeId", "text")
+                    .queryParam("toApplicationId", "archive")
+                    .queryParam("toTypeId", "code")
+                    .queryParam("displayName", "Display")
+                    .queryParam("createdBy", createdBy.toString())
+                    .queryParam("createdAtFrom", createdAtFrom.toString())
+                    .queryParam("createdAtTo", createdAtTo.toString())
+                    .queryParam("modifiedBy", modifiedBy.toString())
+                    .queryParam("modifiedAtFrom", modifiedAtFrom.toString())
+                    .queryParam("modifiedAtTo", modifiedAtTo.toString()),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.content[0].id").value(1))
+            .andExpect(jsonPath("$.content[0].displayName").value("Display name"))
+
+        verify(valueConversionService).findAllBySourceApplicationIds(
+            expectedPageRequest,
+            false,
+            authorizedSourceApplicationIds,
+            expectedFilter,
+        )
+    }
+
+    @Test
+    fun `getting value conversions without sort parameters should use stable id sort`() {
+        val candidateSourceApplicationIds = setOf(1L)
+        val authorizedSourceApplicationIds = setOf(1L)
+        val expectedPageRequest = PageRequest.of(0, 20, Sort.by(Sort.Order.asc("id")))
+
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(authorizedSourceApplicationIds)
+        whenever(
+            valueConversionService.findAllBySourceApplicationIds(
+                expectedPageRequest,
+                true,
+                authorizedSourceApplicationIds,
+                ValueConversionFilter(),
+            ),
+        ).thenReturn(PageImpl(listOf(validResponse())))
+
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "20"),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.content[0].id").value(1))
+
+        verify(valueConversionService).findAllBySourceApplicationIds(
+            expectedPageRequest,
+            true,
+            authorizedSourceApplicationIds,
+            ValueConversionFilter(),
+        )
+    }
+
+    @Test
     fun `getting value conversions with invalid size should return bad request problem detail`() {
         mockMvc
             .perform(
@@ -420,22 +549,7 @@ class ValueConversionControllerWebMvcTest {
     }
 
     @Test
-    fun `getting value conversions with unknown sort property should return internal server error problem detail`() {
-        val candidateSourceApplicationIds = setOf(1L)
-        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
-        whenever(
-            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
-                authentication,
-                candidateSourceApplicationIds,
-            ),
-        ).thenReturn(candidateSourceApplicationIds)
-        whenever(valueConversionService.findAllBySourceApplicationIds(any(), any(), any()))
-            .thenThrow(
-                IllegalArgumentException(
-                    "No property 'unknownField' found for type 'ValueConversion'",
-                ),
-            )
-
+    fun `getting value conversions with unknown sort property should return bad request problem detail`() {
         mockMvc
             .perform(
                 get("/api/intern/value-convertings")
@@ -444,11 +558,62 @@ class ValueConversionControllerWebMvcTest {
                     .queryParam("size", "10")
                     .queryParam("sortProperty", "unknownField")
                     .queryParam("sortDirection", "ASC"),
-            ).andExpect(status().isInternalServerError)
+            ).andExpect(status().isBadRequest)
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
-            .andExpect(jsonPath("$.title").value("Internal Server Error"))
-            .andExpect(jsonPath("$.status").value(500))
-            .andExpect(jsonPath("$.detail").value("Internal server error"))
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(
+                jsonPath("$.detail").value(
+                    "Validation error: 'sortProperty' must be one of createdAt, displayName, id, modifiedAt",
+                ),
+            )
+
+        verifyNoInteractions(userAuthorizationService, valueConversionService)
+    }
+
+    @Test
+    fun `getting value conversions with invalid date parameter should return bad request problem detail`() {
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "10")
+                    .queryParam("sortProperty", "id")
+                    .queryParam("sortDirection", "ASC")
+                    .queryParam("createdAtFrom", "not-an-instant"),
+            ).andExpect(status().isBadRequest)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(jsonPath("$.detail").value("Invalid value for request parameter 'createdAtFrom'"))
+
+        verifyNoInteractions(userAuthorizationService, valueConversionService)
+    }
+
+    @Test
+    fun `getting value conversions with invalid date range should return bad request problem detail`() {
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "10")
+                    .queryParam("sortProperty", "id")
+                    .queryParam("sortDirection", "ASC")
+                    .queryParam("createdAtFrom", "2026-02-01T00:00:00Z")
+                    .queryParam("createdAtTo", "2026-01-01T00:00:00Z"),
+            ).andExpect(status().isBadRequest)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+            .andExpect(jsonPath("$.title").value("Bad Request"))
+            .andExpect(jsonPath("$.status").value(400))
+            .andExpect(
+                jsonPath("$.detail").value(
+                    "Validation error: createdAtFrom must be before or equal to createdAtTo",
+                ),
+            )
+
+        verifyNoInteractions(userAuthorizationService, valueConversionService)
     }
 
     private fun validRequest(): ValueConversionRequest {

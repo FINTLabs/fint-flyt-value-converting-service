@@ -1,12 +1,13 @@
 package no.novari.value.converting.infrastructure.persistence
 
 import no.novari.value.converting.domain.ValueConversion
-import org.springframework.data.domain.Page
-import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor
 import org.springframework.data.jpa.repository.Query
 
-interface ValueConversionRepository : JpaRepository<ValueConversion, Long> {
+interface ValueConversionRepository :
+    JpaRepository<ValueConversion, Long>,
+    JpaSpecificationExecutor<ValueConversion> {
     @Query(
         """
         SELECT DISTINCT valueConversion.fromApplicationId
@@ -15,9 +16,4 @@ interface ValueConversionRepository : JpaRepository<ValueConversion, Long> {
         """,
     )
     fun findDistinctSourceApplicationIds(): Set<Long>
-
-    fun findAllByFromApplicationIdIn(
-        pageable: Pageable,
-        fromApplicationIds: Set<Long>,
-    ): Page<ValueConversion>
 }
