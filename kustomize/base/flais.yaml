@@ -35,11 +35,6 @@ spec:
         path: path
         headers:
           Authorization: "re:.+"
-      # Cookie/nettleser: alt annet håndteres av SSO-middlewaren (cookie -> Bearer).
-      - host: flyt.vigoiks.no
-        path: path
-        middlewares:
-          - fint-flyt-auth-forward-sso
   env:
     - name: JAVA_TOOL_OPTIONS
       value: '-XX:+ExitOnOutOfMemoryError -Xmx576M -Xms384M'
