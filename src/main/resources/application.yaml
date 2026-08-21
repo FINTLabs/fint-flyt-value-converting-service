@@ -6,6 +6,9 @@ server:
     include-message: always
 
 spring:
+  application:
+    name: ${fint.application-id}
+
   profiles:
     include:
       - flyt-kafka
