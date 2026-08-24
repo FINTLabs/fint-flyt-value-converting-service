@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: FINTLabs/fint-flyt-github-workflows/.github/workflows/java-app-build-image.yaml@main
+    uses: FINTLabs/fint-flyt-github-workflows/.github/workflows/java-app-build-image.yaml@dependabot/github_actions/github-actions-e224e3f0fb
     with:
       push-image: ${{ github.event_name == 'push' }}
     secrets: inherit
