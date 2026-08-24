@@ -43,7 +43,7 @@ jobs:
 
   deploy:
     needs: build
-    uses: FINTLabs/fint-flyt-github-workflows/.github/workflows/java-app-deploy-aks.yaml@dependabot/github_actions/github-actions-e224e3f0fb
+    uses: FINTLabs/fint-flyt-github-workflows/.github/workflows/java-app-deploy-aks.yaml@edddaa4a7cc1393b11f7af11b06a66830d8c343b
     with:
       org: ${{ inputs.org }}
       cluster: ${{ inputs.cluster }}
