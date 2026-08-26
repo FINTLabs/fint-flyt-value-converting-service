@@ -21,6 +21,7 @@ plugins {
     kotlin("jvm") version "2.4.10"
     kotlin("plugin.spring") version "2.4.10"
     kotlin("plugin.jpa") version "2.4.10"
+    kotlin("kapt") version "2.4.10"
 }
 
 group = "no.novari"
@@ -79,12 +80,14 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
 
     annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
+    kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-core")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
+    testImplementation(kotlin("test"))
 }
 
 tasks.test {
