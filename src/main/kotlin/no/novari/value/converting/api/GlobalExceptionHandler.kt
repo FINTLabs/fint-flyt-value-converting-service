@@ -1,11 +1,11 @@
 package no.novari.value.converting.api
 
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
+import io.github.oshai.kotlinlogging.KotlinLogging
 import no.novari.value.converting.api.exception.InvalidRequestParameterException
 import no.novari.value.converting.api.exception.ValueConversionDataIntegrityException
 import no.novari.value.converting.api.exception.ValueConversionNotFoundException
 import no.novari.value.converting.api.exception.ValueConversionValidationException
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ProblemDetail
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -19,11 +19,11 @@ import org.springframework.web.server.ResponseStatusException
 
 @RestControllerAdvice
 class GlobalExceptionHandler {
-    private val logger = LoggerFactory.getLogger(GlobalExceptionHandler::class.java)
+    private val logger = KotlinLogging.logger {}
 
     @ExceptionHandler(ValueConversionNotFoundException::class)
     fun handleValueConversionNotFound(exception: ValueConversionNotFoundException): ProblemDetail {
-        logger.warn("Value conversion not found", exception)
+        logger.warn(exception) { "Value conversion not found" }
         return createProblemDetail(
             status = HttpStatus.NOT_FOUND,
             title = "Not Found",
@@ -33,7 +33,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException::class)
     fun handleHttpMessageNotReadable(exception: HttpMessageNotReadableException): ProblemDetail {
-        logger.warn("Malformed request body", exception)
+        logger.warn(exception) { "Malformed request body" }
         return createProblemDetail(
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             title = "Unprocessable Entity",
@@ -43,7 +43,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(HandlerMethodValidationException::class)
     fun handleHandlerMethodValidation(exception: HandlerMethodValidationException): ProblemDetail {
-        logger.warn("Request parameter validation failed", exception)
+        logger.warn(exception) { "Request parameter validation failed" }
         return createProblemDetail(
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
@@ -53,7 +53,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidRequestParameterException::class)
     fun handleInvalidRequestParameter(exception: InvalidRequestParameterException): ProblemDetail {
-        logger.warn("Invalid request parameter", exception)
+        logger.warn(exception) { "Invalid request parameter" }
         return createProblemDetail(
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
@@ -63,7 +63,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(MissingServletRequestParameterException::class)
     fun handleMissingServletRequestParameter(exception: MissingServletRequestParameterException): ProblemDetail {
-        logger.warn("Missing request parameter", exception)
+        logger.warn(exception) { "Missing request parameter" }
         return createProblemDetail(
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
@@ -73,7 +73,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(BindException::class)
     fun handleBindException(exception: BindException): ProblemDetail {
-        logger.warn("Request parameter binding failed", exception)
+        logger.warn(exception) { "Request parameter binding failed" }
         return createProblemDetail(
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
@@ -84,7 +84,7 @@ class GlobalExceptionHandler {
     @ExceptionHandler(ResponseStatusException::class)
     fun handleResponseStatusException(exception: ResponseStatusException): ProblemDetail {
         val status = HttpStatus.valueOf(exception.statusCode.value())
-        logger.warn("Request rejected with response status", exception)
+        logger.warn(exception) { "Request rejected with response status" }
         return createProblemDetail(
             status = status,
             title = status.reasonPhrase,
@@ -94,7 +94,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(ValueConversionValidationException::class)
     fun handleValueConversionValidation(exception: ValueConversionValidationException): ProblemDetail {
-        logger.warn("Value conversion validation failed", exception)
+        logger.warn(exception) { "Value conversion validation failed" }
         return createProblemDetail(
             status = HttpStatus.UNPROCESSABLE_ENTITY,
             title = "Unprocessable Entity",
@@ -104,7 +104,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(ValueConversionDataIntegrityException::class)
     fun handleValueConversionDataIntegrity(exception: ValueConversionDataIntegrityException): ProblemDetail {
-        logger.error("Value conversion data integrity violation", exception)
+        logger.error(exception) { "Value conversion data integrity violation" }
         return createProblemDetail(
             status = HttpStatus.INTERNAL_SERVER_ERROR,
             title = "Internal Server Error",
@@ -114,7 +114,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException::class)
     fun handleMethodArgumentTypeMismatch(exception: MethodArgumentTypeMismatchException): ProblemDetail {
-        logger.warn("Request parameter type mismatch", exception)
+        logger.warn(exception) { "Request parameter type mismatch" }
         return createProblemDetail(
             status = HttpStatus.BAD_REQUEST,
             title = "Bad Request",
@@ -124,7 +124,7 @@ class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception::class)
     fun handleUnhandledException(exception: Exception): ProblemDetail {
-        logger.error("Unhandled exception", exception)
+        logger.error(exception) { "Unhandled exception" }
         return createProblemDetail(
             status = HttpStatus.INTERNAL_SERVER_ERROR,
             title = "Internal Server Error",
