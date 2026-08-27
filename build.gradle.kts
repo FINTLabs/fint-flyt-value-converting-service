@@ -84,6 +84,7 @@ dependencies {
     kapt("org.springframework.boot:spring-boot-configuration-processor")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("no.novari:flyt-catalog-contract-fixtures:1.0.0-rc-1")
     testImplementation("org.springframework.security:spring-security-core")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.3.0")
     testImplementation("org.testcontainers:junit-jupiter")
