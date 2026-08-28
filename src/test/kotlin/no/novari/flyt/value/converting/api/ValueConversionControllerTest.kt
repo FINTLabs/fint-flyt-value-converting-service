@@ -21,7 +21,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.http.HttpStatus
@@ -111,8 +111,7 @@ class ValueConversionControllerTest {
         ).thenReturn(mockSourceApplicationIds)
 
         val mockContent = listOf(mock<ValueConversionResponse>())
-        val mockPage = mock<Page<ValueConversionResponse>>()
-        whenever(mockPage.content).thenReturn(mockContent)
+        val mockPage = PageImpl(mockContent, pageRequest, mockContent.size.toLong())
         whenever(
             valueConversionService.findAllBySourceApplicationIds(
                 pageRequest,
@@ -191,8 +190,7 @@ class ValueConversionControllerTest {
         ).thenReturn(authorizedSourceApplicationIds)
 
         val mockContent = listOf(mock<ValueConversionResponse>())
-        val mockPage = mock<Page<ValueConversionResponse>>()
-        whenever(mockPage.content).thenReturn(mockContent)
+        val mockPage = PageImpl(mockContent, expectedPageRequest, mockContent.size.toLong())
         whenever(
             valueConversionService.findAllBySourceApplicationIds(
                 expectedPageRequest,

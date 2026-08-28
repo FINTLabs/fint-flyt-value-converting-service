@@ -27,7 +27,7 @@ Base path: `/api/intern/value-convertings`
 
 | Method | Path                   | Description                                                                              | Request body                                 | Response                                      |
 |--------|------------------------|------------------------------------------------------------------------------------------|----------------------------------------------|-----------------------------------------------|
-| `GET`  | `/`                    | Paginated list of conversions; supports sorting and omitting the converting map payload. | –                                            | `200 OK` with `Page<ValueConversionResponse>` |
+| `GET`  | `/`                    | Paginated list of conversions; supports sorting and omitting the converting map payload. | –                                            | `200 OK` with `ValueConversionPageResponse` |
 | `GET`  | `/{valueConversionId}` | Fetch a single conversion including its map unless trimmed by the caller.                | –                                            | `200 OK`, `404` if missing                    |
 | `POST` | `/`                    | Create a new conversion; validation errors return `422 ProblemDetail`.                   | JSON `ValueConversionRequest` (map required) | `200 OK` with `ValueConversionResponse`       |
 
@@ -40,7 +40,9 @@ Query parameters for `GET /`:
 | `sortProperty`         | no       | Prefer `displayName`, `createdAt`, or `modifiedAt`. Defaults to `id` when omitted. Legacy sort fields are still accepted for frontend compatibility. Non-`id` sorts are secondarily sorted by `id` for stable pagination. |
 | `sortDirection`        | no       | `ASC` or `DESC`. Defaults to `ASC` when omitted.                                                              |
 | `excludeConvertingMap` | no       | `true` skips the map payload for list views.                                                                  |
-| `sourceApplicationIds` | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
+| `fromApplicationIds`   | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
+| `fromApplicationId`    | no       | Singular alias for `fromApplicationIds`; repeated values are accepted.                                        |
+| `sourceApplicationIds` | no       | Legacy alias for `fromApplicationIds`.                                                                        |
 | `fromTypeId`           | no       | Case-insensitive exact match.                                                                                 |
 | `toApplicationId`      | no       | Case-insensitive exact match.                                                                                 |
 | `toTypeId`             | no       | Case-insensitive exact match.                                                                                 |
@@ -51,6 +53,9 @@ Query parameters for `GET /`:
 | `modifiedBy`           | no       | Exact actor OID/UUID match against the stored `last_modified_by` audit JSON.                                  |
 | `modifiedAtFrom`       | no       | Inclusive lower bound for `lastModifiedAt`, as an ISO-8601 instant.                                           |
 | `modifiedAtTo`         | no       | Inclusive upper bound for `lastModifiedAt`, as an ISO-8601 instant.                                           |
+
+List responses include `content` plus page metadata: `totalElements`, `totalPages`, `size`, `number`,
+`numberOfElements`, `first`, `last`, `empty`, `sort`, and `pageable`.
 
 `ValueConversionRequest` payload structure:
 

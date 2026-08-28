@@ -436,7 +436,7 @@ class ValueConversionControllerWebMvcTest {
                 authorizedSourceApplicationIds,
                 expectedFilter,
             ),
-        ).thenReturn(PageImpl(listOf(validResponse())))
+        ).thenReturn(PageImpl(listOf(validResponse()), expectedPageRequest, 41))
 
         mockMvc
             .perform(
@@ -462,10 +462,67 @@ class ValueConversionControllerWebMvcTest {
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.content[0].id").value(1))
             .andExpect(jsonPath("$.content[0].displayName").value("Display name"))
+            .andExpect(jsonPath("$.totalElements").value(41))
+            .andExpect(jsonPath("$.totalPages").value(3))
+            .andExpect(jsonPath("$.number").value(0))
+            .andExpect(jsonPath("$.size").value(20))
+            .andExpect(jsonPath("$.numberOfElements").value(1))
+            .andExpect(jsonPath("$.first").value(true))
+            .andExpect(jsonPath("$.last").value(false))
+            .andExpect(jsonPath("$.empty").value(false))
+            .andExpect(jsonPath("$.pageable.pageNumber").value(0))
+            .andExpect(jsonPath("$.pageable.pageSize").value(20))
+            .andExpect(jsonPath("$.pageable.offset").value(0))
+            .andExpect(jsonPath("$.sort.sorted").value(true))
 
         verify(valueConversionService).findAllBySourceApplicationIds(
             expectedPageRequest,
             false,
+            authorizedSourceApplicationIds,
+            expectedFilter,
+        )
+    }
+
+    @Test
+    fun `getting value conversions with from application alias should pass source application filter`() {
+        val candidateSourceApplicationIds = setOf(1L, 2L, 3L)
+        val authorizedSourceApplicationIds = setOf(2L, 3L)
+        val expectedPageRequest = PageRequest.of(0, 20, Sort.by(Sort.Order.asc("id")))
+        val expectedFilter = ValueConversionFilter(sourceApplicationIds = setOf(2L, 99L))
+
+        whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
+        whenever(
+            userAuthorizationService.getUserAuthorizedSourceApplicationIds(
+                authentication,
+                candidateSourceApplicationIds,
+            ),
+        ).thenReturn(authorizedSourceApplicationIds)
+        whenever(
+            valueConversionService.findAllBySourceApplicationIds(
+                expectedPageRequest,
+                true,
+                authorizedSourceApplicationIds,
+                expectedFilter,
+            ),
+        ).thenReturn(PageImpl(emptyList(), expectedPageRequest, 0))
+
+        mockMvc
+            .perform(
+                get("/api/intern/value-convertings")
+                    .principal(authentication)
+                    .queryParam("page", "0")
+                    .queryParam("size", "20")
+                    .queryParam("fromApplicationIds", "2", "99"),
+            ).andExpect(status().isOk)
+            .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+            .andExpect(jsonPath("$.content.length()").value(0))
+            .andExpect(jsonPath("$.totalElements").value(0))
+            .andExpect(jsonPath("$.totalPages").value(0))
+            .andExpect(jsonPath("$.empty").value(true))
+
+        verify(valueConversionService).findAllBySourceApplicationIds(
+            expectedPageRequest,
+            true,
             authorizedSourceApplicationIds,
             expectedFilter,
         )
