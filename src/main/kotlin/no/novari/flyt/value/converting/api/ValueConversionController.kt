@@ -53,7 +53,7 @@ class ValueConversionController(
                 filter = filter,
             )
 
-        return ValueConversionPageResponse(content = valueConversions.content)
+        return ValueConversionPageResponse.from(valueConversions)
     }
 
     @GetMapping("{valueConversionId}")
