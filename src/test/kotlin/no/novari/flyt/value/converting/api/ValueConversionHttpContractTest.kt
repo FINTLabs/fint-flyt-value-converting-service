@@ -26,6 +26,7 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver
 import org.springframework.http.HttpStatus
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
@@ -276,11 +277,16 @@ class ValueConversionHttpContractTest {
      */
     private fun requestIsRejectedBeforeServiceLayer() = Unit
 
+    /**
+     * Siden må være paged. Listeflaten svarer med hele Spring Data-formen, og feltene under
+     * `pageable` leses direkte fra Pageable - på en unpaged Pageable kaster de.
+     */
     private fun stubList(vararg content: ValueConversionResponse) {
         stubAuthorizedSourceApplicationIds()
+        val pageRequest = PageRequest.of(0, 20, Sort.by(Sort.Order.asc("id")))
         whenever(
             valueConversionService.findAllBySourceApplicationIds(any(), any(), any(), any()),
-        ).thenReturn(PageImpl(content.toList()))
+        ).thenReturn(PageImpl(content.toList(), pageRequest, content.size.toLong()))
     }
 
     private fun stubAuthorizedSourceApplicationIds() {
