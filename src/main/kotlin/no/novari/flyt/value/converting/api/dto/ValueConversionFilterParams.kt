@@ -26,8 +26,6 @@ class ValueConversionFilterParams {
     var sortDirection: Sort.Direction? = null
 
     var excludeConvertingMap: Boolean = false
-    var fromApplicationId: Set<Long> = emptySet()
-    var fromApplicationIds: Set<Long> = emptySet()
     var sourceApplicationIds: Set<Long> = emptySet()
     var fromTypeId: String? = null
     var toApplicationId: String? = null
@@ -58,7 +56,7 @@ class ValueConversionFilterParams {
 
     fun toFilter(): ValueConversionFilter =
         ValueConversionFilter(
-            sourceApplicationIds = sourceApplicationIds + fromApplicationId + fromApplicationIds,
+            sourceApplicationIds = sourceApplicationIds,
             fromTypeId = fromTypeId,
             toApplicationId = toApplicationId,
             toTypeId = toTypeId,

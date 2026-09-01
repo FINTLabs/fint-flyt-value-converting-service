@@ -484,11 +484,11 @@ class ValueConversionControllerWebMvcTest {
     }
 
     @Test
-    fun `getting value conversions with from application alias should pass source application filter`() {
+    fun `getting value conversions should only use source application ids for source filtering`() {
         val candidateSourceApplicationIds = setOf(1L, 2L, 3L)
         val authorizedSourceApplicationIds = setOf(2L, 3L)
         val expectedPageRequest = PageRequest.of(0, 20, Sort.by(Sort.Order.asc("id")))
-        val expectedFilter = ValueConversionFilter(sourceApplicationIds = setOf(2L, 99L))
+        val expectedFilter = ValueConversionFilter(sourceApplicationIds = setOf(2L))
 
         whenever(valueConversionService.findDistinctSourceApplicationIds()).thenReturn(candidateSourceApplicationIds)
         whenever(
@@ -512,7 +512,9 @@ class ValueConversionControllerWebMvcTest {
                     .principal(authentication)
                     .queryParam("page", "0")
                     .queryParam("size", "20")
-                    .queryParam("fromApplicationIds", "2", "99"),
+                    .queryParam("sourceApplicationIds", "2")
+                    .queryParam("fromApplicationId", "99")
+                    .queryParam("fromApplicationIds", "100"),
             ).andExpect(status().isOk)
             .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
             .andExpect(jsonPath("$.content.length()").value(0))

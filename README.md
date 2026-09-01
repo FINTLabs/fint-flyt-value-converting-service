@@ -40,9 +40,7 @@ Query parameters for `GET /`:
 | `sortProperty`         | no       | Prefer `displayName`, `createdAt`, or `modifiedAt`. Defaults to `id` when omitted. Legacy sort fields are still accepted for frontend compatibility. Non-`id` sorts are secondarily sorted by `id` for stable pagination. |
 | `sortDirection`        | no       | `ASC` or `DESC`. Defaults to `ASC` when omitted.                                                              |
 | `excludeConvertingMap` | no       | `true` skips the map payload for list views.                                                                  |
-| `fromApplicationIds`   | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
-| `fromApplicationId`    | no       | Singular alias for `fromApplicationIds`; repeated values are accepted.                                        |
-| `sourceApplicationIds` | no       | Legacy alias for `fromApplicationIds`.                                                                        |
+| `sourceApplicationIds` | no       | Repeated or comma-separated source application IDs. This is intersected with the caller's authorized source applications. |
 | `fromTypeId`           | no       | Case-insensitive exact match.                                                                                 |
 | `toApplicationId`      | no       | Case-insensitive exact match.                                                                                 |
 | `toTypeId`             | no       | Case-insensitive exact match.                                                                                 |
