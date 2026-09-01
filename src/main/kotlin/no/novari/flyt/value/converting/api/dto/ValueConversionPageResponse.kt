@@ -46,9 +46,9 @@ data class ValueConversionPageableResponse(
     companion object {
         fun from(pageable: Pageable): ValueConversionPageableResponse =
             ValueConversionPageableResponse(
-                pageNumber = if (pageable.isPaged) pageable.pageNumber else 0,
-                pageSize = if (pageable.isPaged) pageable.pageSize else 0,
-                offset = if (pageable.isPaged) pageable.offset else 0,
+                pageNumber = pageable.pageNumber,
+                pageSize = pageable.pageSize,
+                offset = pageable.offset,
                 sort = ValueConversionSortResponse.from(pageable.sort),
                 paged = pageable.isPaged,
                 unpaged = pageable.isUnpaged,

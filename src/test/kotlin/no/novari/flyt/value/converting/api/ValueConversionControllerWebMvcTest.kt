@@ -550,7 +550,7 @@ class ValueConversionControllerWebMvcTest {
                 authorizedSourceApplicationIds,
                 ValueConversionFilter(),
             ),
-        ).thenReturn(PageImpl(listOf(validResponse())))
+        ).thenReturn(PageImpl(listOf(validResponse()), expectedPageRequest, 1))
 
         mockMvc
             .perform(
@@ -598,7 +598,7 @@ class ValueConversionControllerWebMvcTest {
                 authorizedSourceApplicationIds,
                 ValueConversionFilter(),
             ),
-        ).thenReturn(PageImpl(listOf(validResponse())))
+        ).thenReturn(PageImpl(listOf(validResponse()), expectedPageRequest, 1))
 
         mockMvc
             .perform(
