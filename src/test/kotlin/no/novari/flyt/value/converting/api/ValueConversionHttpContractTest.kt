@@ -305,6 +305,25 @@ class ValueConversionHttpContractTest {
                                 snapshot = snapshot(id = 5L),
                             ),
                         ),
+                        PageRequest.of(0, 20),
+                        1,
+                    ),
+                )
+            }
+
+            "value-converting/history-by-id/ok-paginated" -> {
+                stubExistingValueConversion(id = 5L, fromApplicationId = 1L)
+                whenever(valueConversionHistoryService.findHistory(eq(5L), any(), any())).thenReturn(
+                    PageImpl(
+                        listOf(
+                            historyEntry(
+                                timestamp = CREATED_AT,
+                                type = HistoryEventType.CREATED,
+                                actor = Actor.Unknown,
+                                actorDisplay = null,
+                                snapshot = snapshot(id = 5L),
+                            ),
+                        ),
                         PageRequest.of(1, 1),
                         2,
                     ),
