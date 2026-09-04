@@ -8,6 +8,7 @@ import no.novari.flyt.catalog.contract.fixtures.CatalogContractFixtures
 import no.novari.flyt.catalog.contract.fixtures.FixtureObjectMapper
 import no.novari.flyt.catalog.contract.fixtures.HttpContractFixture
 import no.novari.flyt.catalog.contract.fixtures.HttpContractFixtureRunner
+import no.novari.flyt.value.converting.api.dto.ValueConversionRequest
 import no.novari.flyt.value.converting.api.dto.ValueConversionResponse
 import no.novari.flyt.value.converting.api.dto.ValueConversionSnapshot
 import no.novari.flyt.value.converting.api.exception.ValueConversionValidationException
@@ -16,13 +17,16 @@ import no.novari.flyt.value.converting.domain.ValueConversion
 import no.novari.flyt.value.converting.domain.ValueConversionHistoryService
 import no.novari.flyt.value.converting.infrastructure.persistence.ValueConversionRepository
 import no.novari.flyt.webresourceserver.security.user.UserAuthorizationService
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.mockito.kotlin.any
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doThrow
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
@@ -89,7 +93,58 @@ class ValueConversionHttpContractTest {
             objectMapper = OBJECT_MAPPER,
             customizeRequest = { it.principal(authentication) },
         ).verify(fixture)
+
+        verifyDeserializedRequestFor(fixture)
     }
+
+    /**
+     * Responsen kommer fra stubben, ikke fra det som ble lest inn, så den dekker ikke
+     * request-kontrakten: et felt som forsvinner fra ValueConversionRequest ville blitt stille
+     * ignorert av Jackson uten at noen assertion reagerte.
+     */
+    private fun verifyDeserializedRequestFor(fixture: HttpContractFixture) {
+        when (fixture.id) {
+            "value-converting/post/ok",
+            "value-converting/post/ignores-unknown-fields",
+            -> {
+                val posted = argumentCaptor<ValueConversionRequest>()
+                verify(valueConversionService).save(posted.capture())
+
+                assertThat(posted.firstValue).usingRecursiveComparison().isEqualTo(postedRequest())
+            }
+
+            "value-converting/put/ok" -> {
+                val updated = argumentCaptor<ValueConversionRequest>()
+                verify(valueConversionService).update(eq(1L), updated.capture())
+
+                assertThat(updated.firstValue).usingRecursiveComparison().isEqualTo(updatedRequest())
+            }
+
+            else -> {
+                Unit
+            }
+        }
+    }
+
+    private fun postedRequest() =
+        ValueConversionRequest(
+            displayName = "Display name",
+            fromApplicationId = 1L,
+            fromTypeId = "fromType",
+            toApplicationId = "toAppId",
+            toTypeId = "toType",
+            convertingMap = mapOf("A" to "B"),
+        )
+
+    private fun updatedRequest() =
+        ValueConversionRequest(
+            displayName = "Updated display name",
+            fromApplicationId = 2L,
+            fromTypeId = "updatedFromType",
+            toApplicationId = "updatedToAppId",
+            toTypeId = "updatedToType",
+            convertingMap = mapOf("C" to "D"),
+        )
 
     private fun stubServiceLayerFor(fixture: HttpContractFixture) {
         when (fixture.id) {
