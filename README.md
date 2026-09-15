@@ -94,6 +94,27 @@ Example error response:
 }
 ```
 
+## OpenAPI Documentation
+
+Swagger UI and the OpenAPI specification are available only through direct access to the service. Their paths are deliberately outside the externally exposed ingress route for the internal API:
+
+- `/swagger-ui.html`
+- `/v3/api-docs`
+- `/v3/api-docs.yaml`
+
+In FINTLabs beta, port-forward the Kubernetes service:
+
+```shell
+kubectl -n fintlabs-no port-forward service/fint-flyt-value-converting-service 8080:8080
+```
+
+The documentation is then available at:
+
+- `http://localhost:8080/beta/fintlabs-no/swagger-ui.html`
+- `http://localhost:8080/beta/fintlabs-no/v3/api-docs`
+
+The documentation itself does not require a bearer token over the port-forward. Requests to the documented internal API still require a valid JWT.
+
 ## Kafka Integration
 
 - ValueConversionRequestConsumerConfiguration.valueConversionByIdRequestConsumer provisions a request topic named `value-converting` (parameterized by `value-converting-id`) with a 10-minute retention window.

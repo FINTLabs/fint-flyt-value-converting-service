@@ -1,5 +1,6 @@
 package no.novari.flyt.value.converting.api.dto
 
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.validation.constraints.AssertTrue
 import jakarta.validation.constraints.Max
 import jakarta.validation.constraints.Min
@@ -14,17 +15,22 @@ import java.util.UUID
 class ValueConversionFilterParams {
     @field:NotNull
     @field:Min(0)
+    @field:Schema(description = "Nullbasert sidenummer.", example = "0")
     var page: Int? = null
 
     @field:NotNull
     @field:Min(1)
     @field:Max(1000)
+    @field:Schema(description = "Antall elementer per side, fra 1 til 1000.", example = "20")
     var size: Int? = null
 
+    @field:Schema(description = "Feltet resultatet skal sorteres på.", example = "displayName")
     var sortProperty: String? = null
 
+    @field:Schema(description = "Sorteringsretning.", example = "ASC")
     var sortDirection: Sort.Direction? = null
 
+    @field:Schema(description = "Utelat konverteringskartet fra listevisningen.")
     var excludeConvertingMap: Boolean = false
     var sourceApplicationIds: Set<Long> = emptySet()
     var fromTypeId: String? = null
