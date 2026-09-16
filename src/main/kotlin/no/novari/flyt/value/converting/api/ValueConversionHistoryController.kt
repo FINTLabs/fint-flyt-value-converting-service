@@ -1,5 +1,6 @@
 package no.novari.flyt.value.converting.api
 
+import io.swagger.v3.oas.annotations.tags.Tag
 import no.novari.flyt.audit.history.AuditPropertyFilter
 import no.novari.flyt.audit.web.HistoryControllerSupport
 import no.novari.flyt.value.converting.api.dto.ValueConversionSnapshot
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @RequestMapping("$INTERNAL_API/value-convertings")
+@Tag(name = "Value conversion history", description = "Revisjonshistorikk for verdikonverteringer.")
 class ValueConversionHistoryController(
     private val valueConversionRepository: ValueConversionRepository,
     private val userAuthorizationService: UserAuthorizationService,

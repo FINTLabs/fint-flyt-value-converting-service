@@ -1,5 +1,10 @@
 package no.novari.flyt.value.converting.api
 
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
+import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.validation.Valid
 import no.novari.flyt.value.converting.api.dto.ValueConversionFilterParams
 import no.novari.flyt.value.converting.api.dto.ValueConversionPageResponse
@@ -26,11 +31,22 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @Validated
 @RequestMapping("$INTERNAL_API/value-convertings")
+@Tag(name = "Value conversions", description = "Administrasjon av verdikonverteringer mellom applikasjoner.")
 class ValueConversionController(
     private val valueConversionService: ValueConversionService,
     private val userAuthorizationService: UserAuthorizationService,
 ) {
     @GetMapping
+    @Operation(summary = "Hent verdikonverteringer")
+    @ApiResponses(
+        value =
+            [
+                ApiResponse(responseCode = "200", description = "En side med verdikonverteringer."),
+                ApiResponse(responseCode = "400", description = "Ugyldige filter- eller sideparametere."),
+                ApiResponse(responseCode = "401", description = "Mangler gyldig autentisering."),
+                ApiResponse(responseCode = "403", description = "Brukeren har ikke tilgang."),
+            ],
+    )
     fun getValueConversions(
         authentication: Authentication,
         @Valid @ModelAttribute filterParams: ValueConversionFilterParams,
@@ -57,9 +73,21 @@ class ValueConversionController(
     }
 
     @GetMapping("{valueConversionId}")
+    @Operation(summary = "Hent en verdikonvertering")
+    @ApiResponses(
+        value =
+            [
+                ApiResponse(responseCode = "200", description = "Verdikonverteringen."),
+                ApiResponse(responseCode = "401", description = "Mangler gyldig autentisering."),
+                ApiResponse(responseCode = "403", description = "Brukeren har ikke tilgang."),
+                ApiResponse(responseCode = "404", description = "Verdikonverteringen finnes ikke."),
+            ],
+    )
     fun getValueConversion(
         authentication: Authentication,
-        @PathVariable valueConversionId: Long,
+        @Parameter(description = "ID-en til verdikonverteringen.", example = "42")
+        @PathVariable
+        valueConversionId: Long,
     ): ValueConversionResponse {
         val valueConversion =
             valueConversionService.findById(valueConversionId)
@@ -74,6 +102,16 @@ class ValueConversionController(
     }
 
     @PostMapping
+    @Operation(summary = "Opprett en verdikonvertering")
+    @ApiResponses(
+        value =
+            [
+                ApiResponse(responseCode = "200", description = "Verdikonverteringen ble opprettet."),
+                ApiResponse(responseCode = "401", description = "Mangler gyldig autentisering."),
+                ApiResponse(responseCode = "403", description = "Brukeren har ikke tilgang."),
+                ApiResponse(responseCode = "422", description = "Forespørselen kunne ikke valideres."),
+            ],
+    )
     fun postValueConversion(
         authentication: Authentication,
         @Valid @RequestBody valueConversionRequest: ValueConversionRequest,
@@ -87,9 +125,22 @@ class ValueConversionController(
     }
 
     @PutMapping("{valueConversionId}")
+    @Operation(summary = "Oppdater en verdikonvertering")
+    @ApiResponses(
+        value =
+            [
+                ApiResponse(responseCode = "200", description = "Verdikonverteringen ble oppdatert."),
+                ApiResponse(responseCode = "401", description = "Mangler gyldig autentisering."),
+                ApiResponse(responseCode = "403", description = "Brukeren har ikke tilgang."),
+                ApiResponse(responseCode = "404", description = "Verdikonverteringen finnes ikke."),
+                ApiResponse(responseCode = "422", description = "Forespørselen kunne ikke valideres."),
+            ],
+    )
     fun putValueConversion(
         authentication: Authentication,
-        @PathVariable valueConversionId: Long,
+        @Parameter(description = "ID-en til verdikonverteringen.", example = "42")
+        @PathVariable
+        valueConversionId: Long,
         @Valid @RequestBody valueConversionRequest: ValueConversionRequest,
     ): ValueConversionResponse {
         val valueConversion =
@@ -106,9 +157,21 @@ class ValueConversionController(
 
     @DeleteMapping("{valueConversionId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Slett en verdikonvertering")
+    @ApiResponses(
+        value =
+            [
+                ApiResponse(responseCode = "204", description = "Verdikonverteringen ble slettet."),
+                ApiResponse(responseCode = "401", description = "Mangler gyldig autentisering."),
+                ApiResponse(responseCode = "403", description = "Brukeren har ikke tilgang."),
+                ApiResponse(responseCode = "404", description = "Verdikonverteringen finnes ikke."),
+            ],
+    )
     fun deleteValueConversion(
         authentication: Authentication,
-        @PathVariable valueConversionId: Long,
+        @Parameter(description = "ID-en til verdikonverteringen.", example = "42")
+        @PathVariable
+        valueConversionId: Long,
     ) {
         val valueConversion =
             valueConversionService.findById(valueConversionId)
