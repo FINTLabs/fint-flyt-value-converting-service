@@ -21,17 +21,12 @@ plugins {
     kotlin("jvm") version "2.4.10"
     kotlin("plugin.spring") version "2.4.10"
     kotlin("plugin.jpa") version "2.4.10"
-    kotlin("kapt") version "2.4.10"
 }
 
 group = "no.novari"
 
 kotlin {
     jvmToolchain(25)
-}
-
-configurations {
-    compileOnly
 }
 
 tasks.jar {
@@ -66,8 +61,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.9.1")
-    compileOnly("org.springframework.security:spring-security-config")
-    compileOnly("org.springframework.security:spring-security-web")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("io.github.oshai:kotlin-logging-jvm:8.0.4")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
@@ -84,16 +77,12 @@ dependencies {
     runtimeOnly("net.logstash.logback:logstash-logback-encoder:8.1")
     runtimeOnly("org.postgresql:postgresql")
 
-    annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
-    kapt("org.springframework.boot:spring-boot-configuration-processor")
-
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("no.novari:flyt-catalog-contract-fixtures:1.1.0")
     testImplementation("org.springframework.security:spring-security-core")
     testImplementation("org.mockito.kotlin:mockito-kotlin:6.4.0")
     testImplementation("org.testcontainers:junit-jupiter")
     testImplementation("org.testcontainers:postgresql")
-    testImplementation(kotlin("test"))
 }
 
 tasks.test {
