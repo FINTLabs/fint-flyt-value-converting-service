@@ -145,10 +145,10 @@ flyt-authorization-client, flyt-postgres, and flyt-logging.
 
 ## Running Locally
 
-Prerequisites: Java 25+, Gradle wrapper, Docker (for PostgreSQL), and a Kafka broker (e.g., local kafka or Redpanda). You can start the database with the bundled helper:
+Prerequisites: Java 25+, Gradle wrapper, and Docker. Start PostgreSQL and Kafka with Docker Compose:
 
 ```shell
-./start-postgres                # launches postgres:latest on port 5440
+docker compose up -d            # PostgreSQL on port 5440 and Kafka on port 9092
 ```
 
 Then run the service with development profiles:
@@ -172,6 +172,8 @@ Local profile defaults:
 
 - PostgreSQL: jdbc:postgresql://localhost:5440/fint-flyt-value-converting-service with username postgres/password.
 - Kafka: localhost:9092.
+
+Add `--profile tools` to also start Kafdrop on http://localhost:19000. `docker compose down -v` stops everything and wipes the data.
 - Internal security: authorized-org-id-role-pairs-json grants DEVELOPER for vigo.no to ease testing.
 
 ## Deployment
