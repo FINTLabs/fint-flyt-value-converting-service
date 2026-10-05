@@ -173,7 +173,7 @@ Local profile defaults:
 - PostgreSQL: jdbc:postgresql://localhost:5440/fint-flyt-value-converting-service with username postgres/password.
 - Kafka: localhost:9092.
 
-Add `--profile tools` to also start Kafdrop on http://localhost:19000. `docker compose down -v` stops everything and wipes the data.
+Add `--profile tools` to also start Kafdrop on http://localhost:19000. Kafka topics and the database are empty on every start.
 - Internal security: authorized-org-id-role-pairs-json grants DEVELOPER for vigo.no to ease testing.
 
 ## Deployment
